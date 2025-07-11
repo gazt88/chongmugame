@@ -1,6 +1,6 @@
 {
   "name": "coffee-lottery",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "총무팀 커피내기 게임 - 향상된 사다리게임 포함",
   "type": "module",
   "scripts": {
