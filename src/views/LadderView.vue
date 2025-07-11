@@ -161,21 +161,42 @@
           class="block"
         />
         
-        <!-- 움직이는 플레이어 아바타 -->
+        <!-- 움직이는 플레이어 아바타 (이름표) -->
         <div
           v-if="currentAnimatingPlayer && animatingAvatar.visible"
           :class="[
-            'absolute w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold',
-            'bg-red-500 text-white border-2 border-white shadow-lg transition-all duration-300 ease-in-out z-10'
+            'absolute px-4 py-2 rounded-full flex items-center justify-center font-bold text-sm',
+            'bg-gradient-to-r from-red-500 to-orange-500 text-white border-4 border-white shadow-2xl',
+            'transition-all duration-500 ease-in-out z-20 animate-pulse'
           ]"
           :style="{
             left: `${animatingAvatar.x}px`,
             top: `${animatingAvatar.y}px`,
-            transform: 'translate(-50%, -50%)'
+            transform: 'translate(-50%, -50%)',
+            minWidth: '80px'
           }"
         >
-          {{ currentAnimatingPlayer.slice(0, 1) }}
+          <div class="text-center">
+            <div class="text-white font-bold">{{ currentAnimatingPlayer }}</div>
+            <div class="text-xs text-yellow-200">🏃‍♂️</div>
+          </div>
         </div>
+        
+        <!-- 이동 경로 트레일 효과 -->
+        <div
+          v-for="(trail, index) in animatingTrails"
+          :key="`trail-${index}`"
+          :class="[
+            'absolute w-3 h-3 rounded-full bg-orange-300 transition-all duration-300 ease-out z-10',
+            'opacity-' + (100 - index * 20)
+          ]"
+          :style="{
+            left: `${trail.x}px`,
+            top: `${trail.y}px`,
+            transform: 'translate(-50%, -50%)',
+            opacity: Math.max(0.1, 1 - index * 0.2)
+          }"
+        ></div>
       </div>
 
       <!-- 결과 요약 -->
@@ -289,6 +310,7 @@ export default {
     // 애니메이션 관련
     const currentAnimatingPlayer = ref(null)
     const animatingAvatar = ref({ x: 0, y: 0, visible: false })
+    const animatingTrails = ref([]) // 애니메이션 경로의 트레일 정보
     
     // 캔버스 관련
     const ladderCanvas = ref(null)
@@ -362,19 +384,51 @@ export default {
       const playerCount = props.gameState.participants.length
       const structure = []
       
-      // 각 레벨마다 연결선 생성
+      // 각 레벨마다 다양한 연결선 생성
       for (let level = 0; level < ladderLevels.value; level++) {
-        const connections = []
+        const levelConnections = {
+          horizontal: [], // 가로선 (기본)
+          diagonalDown: [], // 대각선 아래
+          diagonalUp: [], // 대각선 위
+          curve: [], // 곡선 연결
+          zigzag: [] // 지그재그 연결
+        }
+        
         let lastConnection = -2 // 연속된 연결선 방지
         
         for (let i = 0; i < playerCount - 1; i++) {
-          // 연속된 연결선이 아니고, 35% 확률로 연결선 생성
-          if (i > lastConnection + 1 && Math.random() < 0.35) {
-            connections.push(i)
-            lastConnection = i
+          if (i > lastConnection + 1) {
+            const connectionType = Math.random()
+            
+            // 40% 확률로 기본 가로선
+            if (connectionType < 0.4) {
+              levelConnections.horizontal.push(i)
+              lastConnection = i
+            }
+            // 20% 확률로 대각선 아래
+            else if (connectionType < 0.6 && level < ladderLevels.value - 1) {
+              levelConnections.diagonalDown.push(i)
+              lastConnection = i
+            }
+            // 15% 확률로 대각선 위
+            else if (connectionType < 0.75 && level > 0) {
+              levelConnections.diagonalUp.push(i)
+              lastConnection = i
+            }
+            // 10% 확률로 곡선 연결
+            else if (connectionType < 0.85) {
+              levelConnections.curve.push(i)
+              lastConnection = i
+            }
+            // 나머지 확률로 지그재그 연결
+            else if (connectionType < 0.95) {
+              levelConnections.zigzag.push(i)
+              lastConnection = i
+            }
           }
         }
-        structure.push(connections)
+        
+        structure.push(levelConnections)
       }
       
       return structure
@@ -406,14 +460,14 @@ export default {
         ctx.stroke()
       }
       
-      // 가로선 그리기 (연결선)
-      ctx.strokeStyle = '#F28C28'
-      ctx.lineWidth = 3
-      
-      ladderStructure.value.forEach((connections, level) => {
+      // 복잡한 연결선 그리기
+      ladderStructure.value.forEach((levelConnections, level) => {
         const y = canvasConfig.value.padding + (level + 1) * canvasConfig.value.levelSpacing
         
-        connections.forEach(connection => {
+        // 1. 기본 가로선 (주황색)
+        ctx.strokeStyle = '#F28C28'
+        ctx.lineWidth = 3
+        levelConnections.horizontal.forEach(connection => {
           const x1 = canvasConfig.value.padding + connection * canvasConfig.value.playerSpacing
           const x2 = canvasConfig.value.padding + (connection + 1) * canvasConfig.value.playerSpacing
           
@@ -424,6 +478,103 @@ export default {
           
           // 연결점에 작은 원 그리기
           ctx.fillStyle = '#F28C28'
+          ctx.beginPath()
+          ctx.arc(x1, y, 4, 0, 2 * Math.PI)
+          ctx.fill()
+          ctx.beginPath()
+          ctx.arc(x2, y, 4, 0, 2 * Math.PI)
+          ctx.fill()
+        })
+        
+        // 2. 대각선 아래 (빨간색)
+        ctx.strokeStyle = '#DC2626'
+        ctx.lineWidth = 3
+        levelConnections.diagonalDown.forEach(connection => {
+          const x1 = canvasConfig.value.padding + connection * canvasConfig.value.playerSpacing
+          const x2 = canvasConfig.value.padding + (connection + 1) * canvasConfig.value.playerSpacing
+          const y2 = canvasConfig.value.padding + (level + 2) * canvasConfig.value.levelSpacing
+          
+          ctx.beginPath()
+          ctx.moveTo(x1, y)
+          ctx.lineTo(x2, y2)
+          ctx.stroke()
+          
+          // 화살표 표시
+          ctx.fillStyle = '#DC2626'
+          ctx.beginPath()
+          ctx.arc(x1, y, 5, 0, 2 * Math.PI)
+          ctx.fill()
+          ctx.beginPath()
+          ctx.arc(x2, y2, 5, 0, 2 * Math.PI)
+          ctx.fill()
+        })
+        
+        // 3. 대각선 위 (파란색)
+        ctx.strokeStyle = '#2563EB'
+        ctx.lineWidth = 3
+        levelConnections.diagonalUp.forEach(connection => {
+          const x1 = canvasConfig.value.padding + connection * canvasConfig.value.playerSpacing
+          const x2 = canvasConfig.value.padding + (connection + 1) * canvasConfig.value.playerSpacing
+          const y0 = canvasConfig.value.padding + level * canvasConfig.value.levelSpacing
+          
+          ctx.beginPath()
+          ctx.moveTo(x1, y)
+          ctx.lineTo(x2, y0)
+          ctx.stroke()
+          
+          // 화살표 표시
+          ctx.fillStyle = '#2563EB'
+          ctx.beginPath()
+          ctx.arc(x1, y, 5, 0, 2 * Math.PI)
+          ctx.fill()
+          ctx.beginPath()
+          ctx.arc(x2, y0, 5, 0, 2 * Math.PI)
+          ctx.fill()
+        })
+        
+        // 4. 곡선 연결 (초록색)
+        ctx.strokeStyle = '#16A34A'
+        ctx.lineWidth = 3
+        levelConnections.curve.forEach(connection => {
+          const x1 = canvasConfig.value.padding + connection * canvasConfig.value.playerSpacing
+          const x2 = canvasConfig.value.padding + (connection + 1) * canvasConfig.value.playerSpacing
+          const midX = (x1 + x2) / 2
+          const midY = y - 20
+          
+          ctx.beginPath()
+          ctx.moveTo(x1, y)
+          ctx.quadraticCurveTo(midX, midY, x2, y)
+          ctx.stroke()
+          
+          // 연결점
+          ctx.fillStyle = '#16A34A'
+          ctx.beginPath()
+          ctx.arc(x1, y, 4, 0, 2 * Math.PI)
+          ctx.fill()
+          ctx.beginPath()
+          ctx.arc(x2, y, 4, 0, 2 * Math.PI)
+          ctx.fill()
+        })
+        
+        // 5. 지그재그 연결 (보라색)
+        ctx.strokeStyle = '#9333EA'
+        ctx.lineWidth = 3
+        levelConnections.zigzag.forEach(connection => {
+          const x1 = canvasConfig.value.padding + connection * canvasConfig.value.playerSpacing
+          const x2 = canvasConfig.value.padding + (connection + 1) * canvasConfig.value.playerSpacing
+          const midX = (x1 + x2) / 2
+          const midY1 = y - 15
+          const midY2 = y + 15
+          
+          ctx.beginPath()
+          ctx.moveTo(x1, y)
+          ctx.lineTo(midX, midY1)
+          ctx.lineTo(midX, midY2)
+          ctx.lineTo(x2, y)
+          ctx.stroke()
+          
+          // 연결점
+          ctx.fillStyle = '#9333EA'
           ctx.beginPath()
           ctx.arc(x1, y, 4, 0, 2 * Math.PI)
           ctx.fill()
@@ -463,14 +614,52 @@ export default {
       const path = [{ level: 0, position: currentPosition }]
       
       // 각 레벨을 순차적으로 내려가면서 경로 계산
-      ladderStructure.value.forEach((connections, level) => {
-        connections.forEach(connection => {
+      ladderStructure.value.forEach((levelConnections, level) => {
+        // 1. 기본 가로선 연결 확인
+        levelConnections.horizontal.forEach(connection => {
           if (currentPosition === connection) {
             currentPosition = connection + 1
           } else if (currentPosition === connection + 1) {
             currentPosition = connection
           }
         })
+        
+        // 2. 대각선 아래 연결 확인
+        levelConnections.diagonalDown.forEach(connection => {
+          if (currentPosition === connection) {
+            currentPosition = connection + 1
+          } else if (currentPosition === connection + 1) {
+            currentPosition = connection
+          }
+        })
+        
+        // 3. 대각선 위 연결 확인
+        levelConnections.diagonalUp.forEach(connection => {
+          if (currentPosition === connection) {
+            currentPosition = connection + 1
+          } else if (currentPosition === connection + 1) {
+            currentPosition = connection
+          }
+        })
+        
+        // 4. 곡선 연결 확인
+        levelConnections.curve.forEach(connection => {
+          if (currentPosition === connection) {
+            currentPosition = connection + 1
+          } else if (currentPosition === connection + 1) {
+            currentPosition = connection
+          }
+        })
+        
+        // 5. 지그재그 연결 확인
+        levelConnections.zigzag.forEach(connection => {
+          if (currentPosition === connection) {
+            currentPosition = connection + 1
+          } else if (currentPosition === connection + 1) {
+            currentPosition = connection
+          }
+        })
+        
         path.push({ level: level + 1, position: currentPosition })
       })
       
@@ -482,6 +671,7 @@ export default {
       
       currentAnimatingPlayer.value = player
       animatingAvatar.value.visible = true
+      animatingTrails.value = [] // 새로운 경로 시작 시 트레일 초기화
       
       const path = calculatePlayerPath(playerIndex)
       
@@ -492,6 +682,14 @@ export default {
         // 아바타 위치 업데이트
         animatingAvatar.value.x = canvasConfig.value.padding + step.position * canvasConfig.value.playerSpacing
         animatingAvatar.value.y = canvasConfig.value.padding + step.level * canvasConfig.value.levelSpacing
+        
+        // 트레일 위치 업데이트
+        if (i > 0) {
+          const prevStep = path[i - 1]
+          const trailX = canvasConfig.value.padding + prevStep.position * canvasConfig.value.playerSpacing
+          const trailY = canvasConfig.value.padding + prevStep.level * canvasConfig.value.levelSpacing
+          animatingTrails.value.push({ x: trailX, y: trailY })
+        }
         
         // 각 단계마다 500ms 대기
         await new Promise(resolve => setTimeout(resolve, 500))
@@ -556,6 +754,7 @@ export default {
       playerResults.value = {}
       currentAnimatingPlayer.value = null
       animatingAvatar.value = { x: 0, y: 0, visible: false }
+      animatingTrails.value = [] // 게임 재시작 시 트레일 초기화
       ladderStructure.value = []
       stopTimer()
     }
@@ -591,6 +790,7 @@ export default {
       playerResults,
       currentAnimatingPlayer,
       animatingAvatar,
+      animatingTrails, // 템플릿에 추가
       ladderCanvas,
       canvasWidth,
       canvasHeight,
