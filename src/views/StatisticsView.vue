@@ -247,7 +247,15 @@ import {
   RestartIcon,
   HomeIcon
 } from '../components/icons/GameIcons.vue'
-import { getGameHistory, getCoffeePrice, setCoffeePrice } from '../utils/statistics.js'
+import { 
+  loadStatistics, 
+  getSettings, 
+  saveSettings, 
+  getTopSpenders, 
+  getRecentGames, 
+  getMonthlyStats, 
+  clearStatistics 
+} from '../utils/statistics.js'
 
 export default {
   name: 'StatisticsView',
@@ -262,8 +270,8 @@ export default {
   emits: ['back-to-home'],
   setup() {
     const activeTab = ref('ranking')
-    const coffeePrice = ref(4000)
-    const gameHistory = ref([])
+    const coffeePrice = ref(5000)
+    const statistics = ref({})
     
     const tabs = [
       { id: 'ranking', name: '지출 랭킹' },
@@ -273,73 +281,30 @@ export default {
     
     // 계산된 속성들
     const totalStats = computed(() => {
-      const stats = {
-        totalGames: gameHistory.value.length,
-        totalAmount: gameHistory.value.length * coffeePrice.value,
-        players: {}
-      }
-      
-      gameHistory.value.forEach(game => {
-        if (!stats.players[game.loser]) {
-          stats.players[game.loser] = { loseCount: 0, totalSpent: 0 }
-        }
-        stats.players[game.loser].loseCount++
-        stats.players[game.loser].totalSpent += coffeePrice.value
-      })
-      
-      return stats
+      return statistics.value
     })
     
     const averagePerGame = computed(() => {
-      return totalStats.value.totalGames > 0 ? coffeePrice.value : 0
+      return totalStats.value.totalGames > 0 ? 
+        totalStats.value.totalAmount / totalStats.value.totalGames : 0
     })
     
     const topSpenders = computed(() => {
-      const players = Object.entries(totalStats.value.players)
-        .map(([name, data]) => ({
-          name,
-          loseCount: data.loseCount,
-          totalSpent: data.totalSpent,
-          averageSpent: data.totalSpent / data.loseCount
-        }))
-        .sort((a, b) => b.totalSpent - a.totalSpent)
-      
-      return players
+      return getTopSpenders(10)
     })
     
     const recentGames = computed(() => {
-      return gameHistory.value
-        .slice(-20)
-        .reverse()
-        .map((game, index) => ({
-          ...game,
-          id: index,
-          participants: game.winners ? game.winners.length + 1 : 2,
-          amount: coffeePrice.value
-        }))
+      return getRecentGames(20)
     })
     
     const monthlyStats = computed(() => {
-      const monthlyData = {}
-      
-      gameHistory.value.forEach(game => {
-        const date = new Date(game.timestamp)
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-        
-        if (!monthlyData[monthKey]) {
-          monthlyData[monthKey] = { games: 0, amount: 0 }
-        }
-        
-        monthlyData[monthKey].games++
-        monthlyData[monthKey].amount += coffeePrice.value
-      })
-      
+      const monthlyData = getMonthlyStats()
       return Object.entries(monthlyData)
         .map(([month, data]) => ({
           month,
-          games: data.games,
-          amount: data.amount,
-          average: data.amount / data.games
+          games: data.totalGames,
+          amount: data.totalAmount,
+          average: data.totalGames > 0 ? data.totalAmount / data.totalGames : 0
         }))
         .sort((a, b) => b.month.localeCompare(a.month))
     })
@@ -349,8 +314,8 @@ export default {
       return amount.toLocaleString() + '원'
     }
     
-    const formatDate = (timestamp) => {
-      const date = new Date(timestamp)
+    const formatDate = (dateString) => {
+      const date = new Date(dateString)
       return date.toLocaleDateString('ko-KR', {
         month: 'short',
         day: 'numeric',
@@ -360,17 +325,20 @@ export default {
     }
     
     const refreshStats = () => {
-      gameHistory.value = getGameHistory()
+      statistics.value = loadStatistics()
     }
     
     const updateCoffeePrice = () => {
-      setCoffeePrice(coffeePrice.value)
+      const settings = getSettings()
+      settings.coffeePrice = coffeePrice.value
+      saveSettings(settings)
     }
     
     // 생명주기
     onMounted(() => {
-      gameHistory.value = getGameHistory()
-      coffeePrice.value = getCoffeePrice()
+      statistics.value = loadStatistics()
+      const settings = getSettings()
+      coffeePrice.value = settings.coffeePrice || 5000
     })
     
     return {

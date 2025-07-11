@@ -1,14 +1,12 @@
 <template>
   <section class="relative h-24 overflow-hidden bg-bg-light">
     <ul class="flex h-full">
-      <!-- 공구 사진 1 -->
+      <!-- 공구 배경 1 -->
       <li class="relative flex-1">
-        <img 
-          src="/images/tools/wrench.jpg" 
-          alt="렌치 도구"
-          class="w-full h-full object-cover grayscale"
-          @error="handleImageError"
-        />
+        <div 
+          class="w-full h-full tool-bg-1"
+          aria-label="렌치 도구"
+        ></div>
         <span class="absolute inset-0 bg-primary-50 mix-blend-multiply"></span>
       </li>
       
@@ -19,14 +17,12 @@
         </svg>
       </li>
       
-      <!-- 공구 사진 2 -->
+      <!-- 공구 배경 2 -->
       <li class="relative flex-1">
-        <img 
-          src="/images/tools/hammer.jpg" 
-          alt="해머 도구"
-          class="w-full h-full object-cover grayscale"
-          @error="handleImageError"
-        />
+        <div 
+          class="w-full h-full tool-bg-2"
+          aria-label="해머 도구"
+        ></div>
         <span class="absolute inset-0 bg-primary-50 mix-blend-multiply"></span>
       </li>
       
@@ -37,14 +33,12 @@
         </svg>
       </li>
       
-      <!-- 공구 사진 3 -->
+      <!-- 공구 배경 3 -->
       <li class="relative flex-1">
-        <img 
-          src="/images/tools/screwdriver.jpg" 
-          alt="스크류드라이버 도구"
-          class="w-full h-full object-cover grayscale"
-          @error="handleImageError"
-        />
+        <div 
+          class="w-full h-full tool-bg-3"
+          aria-label="스크류드라이버 도구"
+        ></div>
         <span class="absolute inset-0 bg-primary-50 mix-blend-multiply"></span>
       </li>
       
@@ -55,14 +49,12 @@
         </svg>
       </li>
       
-      <!-- 공구 사진 4 -->
+      <!-- 공구 배경 4 -->
       <li class="relative flex-1">
-        <img 
-          src="/images/tools/ruler.jpg" 
-          alt="자 도구"
-          class="w-full h-full object-cover grayscale"
-          @error="handleImageError"
-        />
+        <div 
+          class="w-full h-full tool-bg-4"
+          aria-label="자 도구"
+        ></div>
         <span class="absolute inset-0 bg-primary-50 mix-blend-multiply"></span>
       </li>
     </ul>
@@ -71,18 +63,32 @@
 
 <script>
 export default {
-  name: 'ToolPhotoStrip',
-  methods: {
-    handleImageError(event) {
-      // 이미지 로드 실패 시 기본 색상 배경으로 대체
-      event.target.style.display = 'none'
-      event.target.parentElement.style.backgroundColor = '#486B63'
-    }
-  }
+  name: 'ToolPhotoStrip'
 }
 </script>
 
 <style scoped>
+/* 공구 배경 그라데이션 */
+.tool-bg-1 {
+  background: linear-gradient(135deg, #4a5568, #2d3748, #1a202c);
+  filter: grayscale(1);
+}
+
+.tool-bg-2 {
+  background: linear-gradient(135deg, #744210, #553c0a, #2d1b05);
+  filter: grayscale(1);
+}
+
+.tool-bg-3 {
+  background: linear-gradient(135deg, #2d3748, #4a5568, #718096);
+  filter: grayscale(1);
+}
+
+.tool-bg-4 {
+  background: linear-gradient(135deg, #553c0a, #744210, #975a16);
+  filter: grayscale(1);
+}
+
 /* 미디어쿼리: 큰 화면에서 사진 슬라이드 효과 */
 @media (min-width: 2560px) {
   .flex {
@@ -105,6 +111,15 @@ li:hover .bg-primary-50 {
 .bg-primary-500:hover,
 .bg-accent-400:hover {
   filter: brightness(1.1);
+  transition: filter 0.3s ease;
+}
+
+/* 공구 배경 호버 효과 */
+.tool-bg-1:hover,
+.tool-bg-2:hover, 
+.tool-bg-3:hover,
+.tool-bg-4:hover {
+  filter: grayscale(0.7);
   transition: filter 0.3s ease;
 }
 </style> 
