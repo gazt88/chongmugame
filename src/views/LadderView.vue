@@ -488,7 +488,7 @@ export default {
         }
         
         // 각 레벨마다 잠시 대기
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise(resolve => setTimeout(resolve, 33))
       }
       
       // 4. 마지막 레벨까지 내려가기
@@ -542,7 +542,7 @@ export default {
           }
         }
         
-        await new Promise(resolve => setTimeout(resolve, 30))
+        await new Promise(resolve => setTimeout(resolve, 10))
       }
     }
     
@@ -577,7 +577,7 @@ export default {
             }
           }
           
-          await new Promise(resolve => setTimeout(resolve, 35))
+          await new Promise(resolve => setTimeout(resolve, 12))
         }
       } else {
         // 직선 이동
@@ -597,7 +597,7 @@ export default {
             }
           }
           
-          await new Promise(resolve => setTimeout(resolve, 30))
+          await new Promise(resolve => setTimeout(resolve, 10))
         }
       }
     }
