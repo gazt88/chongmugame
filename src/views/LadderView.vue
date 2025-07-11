@@ -23,91 +23,8 @@
       </div>
     </div>
 
-    <!-- 당첨 내용 설정 단계 -->
-    <div v-if="gamePhase === 'setup'" class="flex-1 flex flex-col items-center justify-center p-8">
-      <div class="text-center mb-8 max-w-4xl mx-auto">
-        <h3 class="text-2xl font-bold text-accent-400 mb-4">🎁 당첨 내용을 설정하세요!</h3>
-        <p class="text-fg mb-6">
-          참가자 수에 맞게 당첨 내용을 입력해주세요. ({{ gameState.participants.length }}개 필요)
-        </p>
-        
-        <!-- 참가자와 당첨 내용 매칭 -->
-        <div class="grid md:grid-cols-2 gap-8">
-          <!-- 참가자 목록 -->
-          <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-            <h4 class="text-lg font-bold text-primary-500 mb-4">👥 참가자들</h4>
-            <div class="space-y-2">
-              <div
-                v-for="(participant, index) in gameState.participants"
-                :key="participant"
-                class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-              >
-                <div class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                  {{ index + 1 }}
-                </div>
-                <div class="font-medium">{{ participant }}</div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 당첨 내용 입력 -->
-          <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-            <h4 class="text-lg font-bold text-accent-400 mb-4">🎁 당첨 내용</h4>
-            <div class="space-y-3">
-              <div
-                v-for="index in gameState.participants.length"
-                :key="`prize-${index}`"
-                class="flex items-center gap-3"
-              >
-                <div class="w-8 h-8 bg-accent-400 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                  {{ index }}
-                </div>
-                <input
-                  v-model="prizes[index - 1]"
-                  type="text"
-                  :placeholder="index === gameState.participants.length ? '커피사기 💸' : `${index}등 상품`"
-                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-400 focus:border-transparent"
-                />
-              </div>
-            </div>
-            
-            <!-- 기본값 설정 버튼 -->
-            <div class="mt-4 flex gap-2">
-              <button
-                @click="setDefaultPrizes"
-                class="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-400 transition-colors"
-              >
-                기본값 설정
-              </button>
-              <button
-                @click="shufflePrizes"
-                class="px-4 py-2 text-sm bg-accent-400 text-white rounded hover:bg-accent-200 transition-colors"
-              >
-                🎲 섞기
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 게임 시작 버튼 -->
-        <div class="mt-8">
-          <button
-            v-if="canStartGame"
-            @click="startLadderGame"
-            class="px-8 py-4 text-lg font-bold bg-accent-400 text-fg-invert rounded hover:bg-accent-200 flex items-center gap-3 mx-auto transition-all"
-          >
-            <PlayIcon class="w-6 h-6" />
-            🪜 사다리게임 시작!
-          </button>
-          <p v-else class="text-gray-600 mt-4">
-            모든 당첨 내용을 입력해주세요. ({{ filledPrizes }}/{{ gameState.participants.length }})
-          </p>
-        </div>
-      </div>
-    </div>
-
     <!-- 사다리게임 진행 단계 -->
-    <div v-else-if="gamePhase === 'playing'" class="flex-1 flex flex-col items-center p-6">
+    <div v-if="gamePhase === 'playing'" class="flex-1 flex flex-col items-center p-6">
       <!-- 진행 상황 -->
       <div class="text-center mb-6">
         <div v-if="currentAnimatingPlayer" class="bg-accent-400 text-fg-invert px-6 py-3 rounded-full font-bold text-lg inline-block">
@@ -153,7 +70,7 @@
       </div>
 
       <!-- 사다리 캔버스 -->
-      <div class="relative bg-white rounded-lg p-4 shadow-lg border-4 border-primary-500">
+      <div class="relative bg-white rounded-lg p-2 shadow-lg border-2 border-primary-500 max-w-3xl mx-auto">
         <canvas
           ref="ladderCanvas"
           :width="canvasWidth"
@@ -165,15 +82,15 @@
         <div
           v-if="currentAnimatingPlayer && animatingAvatar.visible"
           :class="[
-            'absolute px-4 py-2 rounded-full flex items-center justify-center font-bold text-sm',
-            'bg-gradient-to-r from-red-500 to-orange-500 text-white border-4 border-white shadow-2xl',
+            'absolute px-3 py-1 rounded-full flex items-center justify-center font-bold text-xs',
+            'bg-gradient-to-r from-red-500 to-orange-500 text-white border-2 border-white shadow-lg',
             'transition-all duration-500 ease-in-out z-20 animate-pulse'
           ]"
           :style="{
             left: `${animatingAvatar.x}px`,
             top: `${animatingAvatar.y}px`,
             transform: 'translate(-50%, -50%)',
-            minWidth: '80px'
+            minWidth: '60px'
           }"
         >
           <div class="text-center">
@@ -187,8 +104,7 @@
           v-for="(trail, index) in animatingTrails"
           :key="`trail-${index}`"
           :class="[
-            'absolute w-3 h-3 rounded-full bg-orange-300 transition-all duration-300 ease-out z-10',
-            'opacity-' + (100 - index * 20)
+            'absolute w-2 h-2 rounded-full bg-orange-300 transition-all duration-300 ease-out z-10'
           ]"
           :style="{
             left: `${trail.x}px`,
@@ -209,11 +125,11 @@
               :key="player"
               :class="[
                 'flex justify-between items-center p-3 rounded-lg',
-                result.includes('커피') ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'
+                result.includes('커피사기') ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'
               ]"
             >
               <div class="font-bold">{{ player }}</div>
-              <div :class="result.includes('커피') ? 'text-red-600 font-bold' : 'text-green-600 font-bold'">
+              <div :class="result.includes('커피사기') ? 'text-red-600 font-bold' : 'text-green-600 font-bold'">
                 {{ result }}
               </div>
             </div>
@@ -240,21 +156,11 @@
     <div class="bg-white border-t-2 border-dashed border-accent-400 p-4">
       <div class="container mx-auto flex justify-center gap-4">
         <button
-          v-if="gamePhase === 'playing'"
           @click="restartGame"
           class="px-6 py-2 bg-accent-400 text-fg-invert rounded hover:bg-accent-200 flex items-center gap-2 transition-all"
         >
           <RestartIcon class="w-4 h-4" />
           다시 시작
-        </button>
-        
-        <button
-          v-if="gamePhase === 'setup'"
-          @click="resetSetup"
-          class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-400 flex items-center gap-2 transition-all"
-        >
-          <RestartIcon class="w-4 h-4" />
-          초기화
         </button>
         
         <button
@@ -297,15 +203,15 @@ export default {
   emits: ['game-complete', 'back-to-home'],
   setup(props, { emit }) {
     // 게임 상태
-    const gamePhase = ref('setup') // 'setup', 'playing', 'completed'
-    const prizes = ref([]) // 당첨 내용들
+    const gamePhase = ref('playing') // 바로 게임 시작
     const elapsedTime = ref(0)
     const gameTimer = ref(null)
     
     // 사다리 관련
     const ladderStructure = ref([])
-    const ladderLevels = ref(8)
+    const ladderLevels = ref(12) // 레벨 수 늘려서 긴장감 증가
     const playerResults = ref({}) // 각 플레이어의 결과
+    const prizeOrder = ref([]) // 하단에 표시할 당첨 결과 순서
     
     // 애니메이션 관련
     const currentAnimatingPlayer = ref(null)
@@ -314,39 +220,22 @@ export default {
     
     // 캔버스 관련
     const ladderCanvas = ref(null)
-    const canvasWidth = ref(800)
-    const canvasHeight = ref(600)
+    const canvasWidth = ref(600) // 크기 줄이기
+    const canvasHeight = ref(450) // 사다리 레벨 증가에 따라 높이 조정
     const canvasConfig = ref({
-      padding: 60,
+      padding: 40, // 패딩 줄이기
       playerSpacing: 0,
       levelSpacing: 0
     })
     
     // 계산된 속성들
-    const filledPrizes = computed(() => {
-      return prizes.value.filter(prize => prize && prize.trim()).length
-    })
-    
-    const canStartGame = computed(() => {
-      return filledPrizes.value === props.gameState.participants.length
-    })
-    
     const allPlayersFinished = computed(() => {
       return Object.keys(playerResults.value).length === props.gameState.participants.length
     })
     
     // 메서드들
     const getCurrentPhaseText = () => {
-      switch (gamePhase.value) {
-        case 'setup':
-          return '당첨 내용 설정 단계'
-        case 'playing':
-          return '사다리게임 진행 중'
-        case 'completed':
-          return '게임 완료'
-        default:
-          return ''
-      }
+      return '커피내기 사다리게임 진행 중'
     }
     
     const formatTime = (seconds) => {
@@ -355,80 +244,56 @@ export default {
       return `${mins}:${secs.toString().padStart(2, '0')}`
     }
     
-    const setDefaultPrizes = () => {
-      const defaultPrizes = []
-      const participantCount = props.gameState.participants.length
+    // 간단한 커피내기 결과 생성
+    const generateCoffeeResults = () => {
+      const participants = props.gameState.participants
+      const coffeePayerIndex = Math.floor(Math.random() * participants.length)
+      const results = []
       
-      for (let i = 0; i < participantCount - 1; i++) {
-        defaultPrizes.push(`${i + 1}등 상품`)
-      }
-      defaultPrizes.push('커피사기 💸')
+      participants.forEach((participant, index) => {
+        if (index === coffeePayerIndex) {
+          results.push('커피사기 💸')
+        } else {
+          results.push('얻어먹기 ☕')
+        }
+      })
       
-      prizes.value = defaultPrizes
-    }
-    
-    const shufflePrizes = () => {
-      const shuffled = [...prizes.value]
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-      }
-      prizes.value = shuffled
-    }
-    
-    const resetSetup = () => {
-      prizes.value = []
+      return results
     }
     
     const generateLadder = () => {
       const playerCount = props.gameState.participants.length
       const structure = []
       
-      // 각 레벨마다 다양한 연결선 생성
+      // 각 레벨마다 연결선 생성 (복잡하고 긴장감 있는 구조)
       for (let level = 0; level < ladderLevels.value; level++) {
-        const levelConnections = {
-          horizontal: [], // 가로선 (기본)
-          diagonalDown: [], // 대각선 아래
-          diagonalUp: [], // 대각선 위
-          curve: [], // 곡선 연결
-          zigzag: [] // 지그재그 연결
-        }
-        
+        const connections = []
         let lastConnection = -2 // 연속된 연결선 방지
         
+        // 더 많은 연결선으로 흥미롭게 만들기
         for (let i = 0; i < playerCount - 1; i++) {
-          if (i > lastConnection + 1) {
-            const connectionType = Math.random()
-            
-            // 40% 확률로 기본 가로선
-            if (connectionType < 0.4) {
-              levelConnections.horizontal.push(i)
-              lastConnection = i
-            }
-            // 20% 확률로 대각선 아래
-            else if (connectionType < 0.6 && level < ladderLevels.value - 1) {
-              levelConnections.diagonalDown.push(i)
-              lastConnection = i
-            }
-            // 15% 확률로 대각선 위
-            else if (connectionType < 0.75 && level > 0) {
-              levelConnections.diagonalUp.push(i)
-              lastConnection = i
-            }
-            // 10% 확률로 곡선 연결
-            else if (connectionType < 0.85) {
-              levelConnections.curve.push(i)
-              lastConnection = i
-            }
-            // 나머지 확률로 지그재그 연결
-            else if (connectionType < 0.95) {
-              levelConnections.zigzag.push(i)
-              lastConnection = i
-            }
+          // 연속된 연결선이 아니고, 65% 확률로 연결선 생성 (긴장감 증가)
+          if (i > lastConnection + 1 && Math.random() < 0.65) {
+            connections.push({
+              from: i,
+              to: i + 1,
+              type: Math.random() < 0.6 ? 'straight' : 'curve' // 60% 직선, 40% 곡선
+            })
+            lastConnection = i
           }
         }
         
-        structure.push(levelConnections)
+        // 빈 레벨이 생기지 않도록 최소 하나의 연결선 보장
+        if (connections.length === 0 && playerCount > 2) {
+          const randomPos = Math.floor(Math.random() * (playerCount - 1))
+          connections.push({
+            from: randomPos,
+            to: randomPos + 1,
+            type: Math.random() < 0.6 ? 'straight' : 'curve'
+          })
+        }
+        
+        structure.push(connections)
       }
       
       return structure
@@ -448,9 +313,10 @@ export default {
       canvasConfig.value.playerSpacing = (canvasWidth.value - 2 * canvasConfig.value.padding) / (playerCount - 1)
       canvasConfig.value.levelSpacing = (canvasHeight.value - 2 * canvasConfig.value.padding) / (ladderLevels.value + 1)
       
-      // 세로선 그리기 (각 플레이어 경로)
+      // 세로선 그리기 (각 플레이어 경로) - 더 굵고 선명하게
       ctx.strokeStyle = '#2C473F'
-      ctx.lineWidth = 4
+      ctx.lineWidth = 5
+      ctx.lineCap = 'round'
       
       for (let i = 0; i < playerCount; i++) {
         const x = canvasConfig.value.padding + i * canvasConfig.value.playerSpacing
@@ -458,213 +324,116 @@ export default {
         ctx.moveTo(x, canvasConfig.value.padding)
         ctx.lineTo(x, canvasHeight.value - canvasConfig.value.padding)
         ctx.stroke()
+        
+        // 플레이어 위치에 시작점 표시
+        ctx.fillStyle = '#2C473F'
+        ctx.beginPath()
+        ctx.arc(x, canvasConfig.value.padding, 8, 0, 2 * Math.PI)
+        ctx.fill()
+        
+        // 도착점 표시
+        ctx.fillStyle = '#F28C28'
+        ctx.beginPath()
+        ctx.arc(x, canvasHeight.value - canvasConfig.value.padding, 8, 0, 2 * Math.PI)
+        ctx.fill()
       }
       
-      // 복잡한 연결선 그리기
-      ladderStructure.value.forEach((levelConnections, level) => {
+      // 연결선 그리기 - 단순하지만 화려하게
+      ladderStructure.value.forEach((connections, level) => {
         const y = canvasConfig.value.padding + (level + 1) * canvasConfig.value.levelSpacing
         
-        // 1. 기본 가로선 (주황색)
-        ctx.strokeStyle = '#F28C28'
-        ctx.lineWidth = 3
-        levelConnections.horizontal.forEach(connection => {
-          const x1 = canvasConfig.value.padding + connection * canvasConfig.value.playerSpacing
-          const x2 = canvasConfig.value.padding + (connection + 1) * canvasConfig.value.playerSpacing
+        connections.forEach((connection, index) => {
+          const x1 = canvasConfig.value.padding + connection.from * canvasConfig.value.playerSpacing
+          const x2 = canvasConfig.value.padding + connection.to * canvasConfig.value.playerSpacing
           
-          ctx.beginPath()
-          ctx.moveTo(x1, y)
-          ctx.lineTo(x2, y)
-          ctx.stroke()
+          // 연결선 색상을 다채롭게
+          const colors = ['#F28C28', '#DC2626', '#16A34A', '#2563EB', '#9333EA', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#F97316']
+          ctx.strokeStyle = colors[index % colors.length]
+          ctx.lineWidth = 4
+          ctx.lineCap = 'round'
           
-          // 연결점에 작은 원 그리기
-          ctx.fillStyle = '#F28C28'
+          if (connection.type === 'curve') {
+            // 곡선 연결
+            const midX = (x1 + x2) / 2
+            const midY = y - 25
+            
+            ctx.beginPath()
+            ctx.moveTo(x1, y)
+            ctx.quadraticCurveTo(midX, midY, x2, y)
+            ctx.stroke()
+            
+            // 곡선 중간에 장식점
+            ctx.fillStyle = ctx.strokeStyle
+            ctx.beginPath()
+            ctx.arc(midX, midY, 6, 0, 2 * Math.PI)
+            ctx.fill()
+          } else {
+            // 직선 연결
+            ctx.beginPath()
+            ctx.moveTo(x1, y)
+            ctx.lineTo(x2, y)
+            ctx.stroke()
+          }
+          
+          // 연결점에 원 그리기
+          ctx.fillStyle = ctx.strokeStyle
           ctx.beginPath()
-          ctx.arc(x1, y, 4, 0, 2 * Math.PI)
+          ctx.arc(x1, y, 6, 0, 2 * Math.PI)
           ctx.fill()
           ctx.beginPath()
-          ctx.arc(x2, y, 4, 0, 2 * Math.PI)
-          ctx.fill()
-        })
-        
-        // 2. 대각선 아래 (빨간색)
-        ctx.strokeStyle = '#DC2626'
-        ctx.lineWidth = 3
-        levelConnections.diagonalDown.forEach(connection => {
-          const x1 = canvasConfig.value.padding + connection * canvasConfig.value.playerSpacing
-          const x2 = canvasConfig.value.padding + (connection + 1) * canvasConfig.value.playerSpacing
-          const y2 = canvasConfig.value.padding + (level + 2) * canvasConfig.value.levelSpacing
-          
-          ctx.beginPath()
-          ctx.moveTo(x1, y)
-          ctx.lineTo(x2, y2)
-          ctx.stroke()
-          
-          // 화살표 표시
-          ctx.fillStyle = '#DC2626'
-          ctx.beginPath()
-          ctx.arc(x1, y, 5, 0, 2 * Math.PI)
-          ctx.fill()
-          ctx.beginPath()
-          ctx.arc(x2, y2, 5, 0, 2 * Math.PI)
-          ctx.fill()
-        })
-        
-        // 3. 대각선 위 (파란색)
-        ctx.strokeStyle = '#2563EB'
-        ctx.lineWidth = 3
-        levelConnections.diagonalUp.forEach(connection => {
-          const x1 = canvasConfig.value.padding + connection * canvasConfig.value.playerSpacing
-          const x2 = canvasConfig.value.padding + (connection + 1) * canvasConfig.value.playerSpacing
-          const y0 = canvasConfig.value.padding + level * canvasConfig.value.levelSpacing
-          
-          ctx.beginPath()
-          ctx.moveTo(x1, y)
-          ctx.lineTo(x2, y0)
-          ctx.stroke()
-          
-          // 화살표 표시
-          ctx.fillStyle = '#2563EB'
-          ctx.beginPath()
-          ctx.arc(x1, y, 5, 0, 2 * Math.PI)
-          ctx.fill()
-          ctx.beginPath()
-          ctx.arc(x2, y0, 5, 0, 2 * Math.PI)
-          ctx.fill()
-        })
-        
-        // 4. 곡선 연결 (초록색)
-        ctx.strokeStyle = '#16A34A'
-        ctx.lineWidth = 3
-        levelConnections.curve.forEach(connection => {
-          const x1 = canvasConfig.value.padding + connection * canvasConfig.value.playerSpacing
-          const x2 = canvasConfig.value.padding + (connection + 1) * canvasConfig.value.playerSpacing
-          const midX = (x1 + x2) / 2
-          const midY = y - 20
-          
-          ctx.beginPath()
-          ctx.moveTo(x1, y)
-          ctx.quadraticCurveTo(midX, midY, x2, y)
-          ctx.stroke()
-          
-          // 연결점
-          ctx.fillStyle = '#16A34A'
-          ctx.beginPath()
-          ctx.arc(x1, y, 4, 0, 2 * Math.PI)
-          ctx.fill()
-          ctx.beginPath()
-          ctx.arc(x2, y, 4, 0, 2 * Math.PI)
-          ctx.fill()
-        })
-        
-        // 5. 지그재그 연결 (보라색)
-        ctx.strokeStyle = '#9333EA'
-        ctx.lineWidth = 3
-        levelConnections.zigzag.forEach(connection => {
-          const x1 = canvasConfig.value.padding + connection * canvasConfig.value.playerSpacing
-          const x2 = canvasConfig.value.padding + (connection + 1) * canvasConfig.value.playerSpacing
-          const midX = (x1 + x2) / 2
-          const midY1 = y - 15
-          const midY2 = y + 15
-          
-          ctx.beginPath()
-          ctx.moveTo(x1, y)
-          ctx.lineTo(midX, midY1)
-          ctx.lineTo(midX, midY2)
-          ctx.lineTo(x2, y)
-          ctx.stroke()
-          
-          // 연결점
-          ctx.fillStyle = '#9333EA'
-          ctx.beginPath()
-          ctx.arc(x1, y, 4, 0, 2 * Math.PI)
-          ctx.fill()
-          ctx.beginPath()
-          ctx.arc(x2, y, 4, 0, 2 * Math.PI)
+          ctx.arc(x2, y, 6, 0, 2 * Math.PI)
           ctx.fill()
         })
       })
       
-      // 참가자 이름 표시 (상단)
+      // 참가자 이름 표시 (상단) - 더 크고 선명하게
       ctx.fillStyle = '#2C473F'
-      ctx.font = 'bold 16px Arial'
+      ctx.font = 'bold 18px Arial'
       ctx.textAlign = 'center'
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'
+      ctx.shadowBlur = 2
       
       props.gameState.participants.forEach((player, index) => {
         const x = canvasConfig.value.padding + index * canvasConfig.value.playerSpacing
-        ctx.fillText(player, x, canvasConfig.value.padding - 20)
+        ctx.fillText(player, x, canvasConfig.value.padding - 25)
       })
       
-      // 당첨 내용 표시 (하단)
-      ctx.fillStyle = '#666'
-      ctx.font = 'bold 14px Arial'
+      // 그림자 제거
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
       
-      prizes.value.forEach((prize, index) => {
+      // 하단에 당첨 결과 표시
+      ctx.font = 'bold 14px Arial'
+      ctx.textAlign = 'center'
+      
+      prizeOrder.value.forEach((prize, index) => {
         const x = canvasConfig.value.padding + index * canvasConfig.value.playerSpacing
-        const lines = prize.length > 10 ? [prize.slice(0, 10), prize.slice(10)] : [prize]
+        const y = canvasHeight.value - canvasConfig.value.padding + 30
         
-        lines.forEach((line, lineIndex) => {
-          const y = canvasHeight.value - canvasConfig.value.padding + 35 + (lineIndex * 16)
-          ctx.fillText(line, x, y)
-        })
+        // 당첨 결과에 따라 색상 다르게
+        if (prize.includes('커피사기')) {
+          ctx.fillStyle = '#DC2626' // 빨간색
+        } else {
+          ctx.fillStyle = '#16A34A' // 초록색
+        }
+        
+        // 배경 박스 그리기
+        const textWidth = ctx.measureText(prize).width
+        ctx.fillStyle = prize.includes('커피사기') ? '#FEF2F2' : '#F0FDF4'
+        ctx.fillRect(x - textWidth/2 - 8, y - 18, textWidth + 16, 22)
+        
+        // 테두리 그리기
+        ctx.strokeStyle = prize.includes('커피사기') ? '#DC2626' : '#16A34A'
+        ctx.lineWidth = 2
+        ctx.strokeRect(x - textWidth/2 - 8, y - 18, textWidth + 16, 22)
+        
+        // 텍스트 그리기
+        ctx.fillStyle = prize.includes('커피사기') ? '#DC2626' : '#16A34A'
+        ctx.fillText(prize, x, y - 2)
       })
     }
     
-    const calculatePlayerPath = (playerIndex) => {
-      let currentPosition = playerIndex
-      const path = [{ level: 0, position: currentPosition }]
-      
-      // 각 레벨을 순차적으로 내려가면서 경로 계산
-      ladderStructure.value.forEach((levelConnections, level) => {
-        // 1. 기본 가로선 연결 확인
-        levelConnections.horizontal.forEach(connection => {
-          if (currentPosition === connection) {
-            currentPosition = connection + 1
-          } else if (currentPosition === connection + 1) {
-            currentPosition = connection
-          }
-        })
-        
-        // 2. 대각선 아래 연결 확인
-        levelConnections.diagonalDown.forEach(connection => {
-          if (currentPosition === connection) {
-            currentPosition = connection + 1
-          } else if (currentPosition === connection + 1) {
-            currentPosition = connection
-          }
-        })
-        
-        // 3. 대각선 위 연결 확인
-        levelConnections.diagonalUp.forEach(connection => {
-          if (currentPosition === connection) {
-            currentPosition = connection + 1
-          } else if (currentPosition === connection + 1) {
-            currentPosition = connection
-          }
-        })
-        
-        // 4. 곡선 연결 확인
-        levelConnections.curve.forEach(connection => {
-          if (currentPosition === connection) {
-            currentPosition = connection + 1
-          } else if (currentPosition === connection + 1) {
-            currentPosition = connection
-          }
-        })
-        
-        // 5. 지그재그 연결 확인
-        levelConnections.zigzag.forEach(connection => {
-          if (currentPosition === connection) {
-            currentPosition = connection + 1
-          } else if (currentPosition === connection + 1) {
-            currentPosition = connection
-          }
-        })
-        
-        path.push({ level: level + 1, position: currentPosition })
-      })
-      
-      return path
-    }
+
     
     const animatePlayerPath = async (player, playerIndex) => {
       if (currentAnimatingPlayer.value) return
@@ -673,58 +442,218 @@ export default {
       animatingAvatar.value.visible = true
       animatingTrails.value = [] // 새로운 경로 시작 시 트레일 초기화
       
-      const path = calculatePlayerPath(playerIndex)
+      // 시작 위치 설정
+      let currentPosition = playerIndex
+      const startX = canvasConfig.value.padding + currentPosition * canvasConfig.value.playerSpacing
+      const startY = canvasConfig.value.padding
       
-      // 애니메이션 실행
-      for (let i = 0; i < path.length; i++) {
-        const step = path[i]
+      animatingAvatar.value.x = startX
+      animatingAvatar.value.y = startY
+      
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // 레벨별로 실제 사다리를 타고 내려가는 애니메이션
+      for (let level = 0; level < ladderLevels.value; level++) {
+        const currentLevelY = canvasConfig.value.padding + (level + 1) * canvasConfig.value.levelSpacing
+        const currentX = canvasConfig.value.padding + currentPosition * canvasConfig.value.playerSpacing
         
-        // 아바타 위치 업데이트
-        animatingAvatar.value.x = canvasConfig.value.padding + step.position * canvasConfig.value.playerSpacing
-        animatingAvatar.value.y = canvasConfig.value.padding + step.level * canvasConfig.value.levelSpacing
+        // 1. 세로선을 따라 현재 레벨까지 내려가기
+        await animateVerticalMove(animatingAvatar.value.y, currentLevelY)
         
-        // 트레일 위치 업데이트
-        if (i > 0) {
-          const prevStep = path[i - 1]
-          const trailX = canvasConfig.value.padding + prevStep.position * canvasConfig.value.playerSpacing
-          const trailY = canvasConfig.value.padding + prevStep.level * canvasConfig.value.levelSpacing
-          animatingTrails.value.push({ x: trailX, y: trailY })
+        // 2. 현재 레벨에서 가로선(연결선) 확인
+        const connections = ladderStructure.value[level]
+        let foundConnection = null
+        
+        // 현재 위치에서 연결선 찾기
+        for (const connection of connections) {
+          if (currentPosition === connection.from) {
+            foundConnection = { ...connection, direction: 'right' }
+            break
+          } else if (currentPosition === connection.to) {
+            foundConnection = { ...connection, direction: 'left' }
+            break
+          }
         }
         
-        // 각 단계마다 500ms 대기
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // 3. 연결선이 있으면 가로선을 타고 이동
+        if (foundConnection) {
+          const targetPosition = foundConnection.direction === 'right' ? foundConnection.to : foundConnection.from
+          const targetX = canvasConfig.value.padding + targetPosition * canvasConfig.value.playerSpacing
+          
+          // 가로선을 따라 이동
+          await animateHorizontalMove(animatingAvatar.value.x, targetX, foundConnection.type)
+          
+          // 위치 업데이트
+          currentPosition = targetPosition
+        }
+        
+        // 각 레벨마다 잠시 대기
+        await new Promise(resolve => setTimeout(resolve, 100))
       }
       
-      // 최종 결과 설정
-      const finalPosition = path[path.length - 1].position
-      const finalPrize = prizes.value[finalPosition]
-      playerResults.value[player] = finalPrize
+      // 4. 마지막 레벨까지 내려가기
+      const finalY = canvasConfig.value.padding + (ladderLevels.value + 1) * canvasConfig.value.levelSpacing
+      await animateVerticalMove(animatingAvatar.value.y, finalY)
+      
+      // 최종 결과 설정 (미리 생성된 결과 사용)
+      playerResults.value[player] = prizeOrder.value[currentPosition]
+      
+      // 최종 위치에서 당첨 결과 강조 효과
+      highlightWinningPosition(currentPosition)
       
       // 애니메이션 종료
-      animatingAvatar.value.visible = false
-      currentAnimatingPlayer.value = null
+      setTimeout(() => {
+        animatingAvatar.value.visible = false
+        currentAnimatingPlayer.value = null
+        
+        // 모든 플레이어가 완료되면 게임 완료 이벤트 발생
+        if (allPlayersFinished.value) {
+          setTimeout(() => {
+            const gameResult = {
+              results: playerResults.value,
+              gameTime: elapsedTime.value,
+              gameMode: 'ladder',
+              totalParticipants: props.gameState.participants.length,
+              timestamp: Date.now()
+            }
+            emit('game-complete', gameResult)
+          }, 1000)
+        }
+      }, 500)
+    }
+    
+    // 세로 이동 애니메이션 (사다리 세로선을 따라)
+    const animateVerticalMove = async (fromY, toY) => {
+      const distance = Math.abs(toY - fromY)
+      const steps = Math.max(10, Math.floor(distance / 20))
+      const stepSize = (toY - fromY) / steps
       
-      // 모든 플레이어가 완료되면 게임 완료 이벤트 발생
-      if (allPlayersFinished.value) {
-        setTimeout(() => {
-          const gameResult = {
-            results: playerResults.value,
-            gameTime: elapsedTime.value,
-            gameMode: 'ladder',
-            totalParticipants: props.gameState.participants.length,
-            timestamp: Date.now()
+      for (let i = 0; i <= steps; i++) {
+        animatingAvatar.value.y = fromY + (stepSize * i)
+        
+        // 트레일 효과
+        if (i % 3 === 0) {
+          animatingTrails.value.push({
+            x: animatingAvatar.value.x,
+            y: animatingAvatar.value.y
+          })
+          if (animatingTrails.value.length > 8) {
+            animatingTrails.value.shift()
           }
-          emit('game-complete', gameResult)
-        }, 1000)
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 30))
       }
     }
     
-    const startLadderGame = () => {
-      if (!canStartGame.value) return
+    // 가로 이동 애니메이션 (사다리 가로선을 따라)
+    const animateHorizontalMove = async (fromX, toX, connectionType) => {
+      const distance = Math.abs(toX - fromX)
+      const steps = Math.max(15, Math.floor(distance / 15))
       
+      if (connectionType === 'curve') {
+        // 곡선 이동
+        const centerX = (fromX + toX) / 2
+        const centerY = animatingAvatar.value.y - 25
+        
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps
+          
+          // 베지어 곡선 계산
+          const x = Math.pow(1 - t, 2) * fromX + 2 * (1 - t) * t * centerX + Math.pow(t, 2) * toX
+          const y = Math.pow(1 - t, 2) * animatingAvatar.value.y + 2 * (1 - t) * t * centerY + Math.pow(t, 2) * animatingAvatar.value.y
+          
+          animatingAvatar.value.x = x
+          animatingAvatar.value.y = y
+          
+          // 트레일 효과
+          if (i % 2 === 0) {
+            animatingTrails.value.push({
+              x: animatingAvatar.value.x,
+              y: animatingAvatar.value.y
+            })
+            if (animatingTrails.value.length > 8) {
+              animatingTrails.value.shift()
+            }
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 35))
+        }
+      } else {
+        // 직선 이동
+        const stepSize = (toX - fromX) / steps
+        
+        for (let i = 0; i <= steps; i++) {
+          animatingAvatar.value.x = fromX + (stepSize * i)
+          
+          // 트레일 효과
+          if (i % 2 === 0) {
+            animatingTrails.value.push({
+              x: animatingAvatar.value.x,
+              y: animatingAvatar.value.y
+            })
+            if (animatingTrails.value.length > 8) {
+              animatingTrails.value.shift()
+            }
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 30))
+        }
+      }
+    }
+    
+    // 당첨 위치 강조 효과
+    const highlightWinningPosition = (position) => {
+      const canvas = ladderCanvas.value
+      if (!canvas) return
+      
+      const ctx = canvas.getContext('2d')
+      const x = canvasConfig.value.padding + position * canvasConfig.value.playerSpacing
+      const y = canvasHeight.value - canvasConfig.value.padding + 30
+      
+      // 강조 효과 애니메이션
+      let flashCount = 0
+      const flashInterval = setInterval(() => {
+        if (flashCount >= 6) {
+          clearInterval(flashInterval)
+          drawStaticLadder() // 원래 상태로 복원
+          return
+        }
+        
+        const prize = prizeOrder.value[position]
+        const textWidth = ctx.measureText(prize).width
+        
+        if (flashCount % 2 === 0) {
+          // 강조 색상
+          ctx.fillStyle = prize.includes('커피사기') ? '#DC2626' : '#16A34A'
+          ctx.fillRect(x - textWidth/2 - 8, y - 18, textWidth + 16, 22)
+          
+          // 강조 테두리
+          ctx.strokeStyle = '#FFD700' // 금색
+          ctx.lineWidth = 4
+          ctx.strokeRect(x - textWidth/2 - 8, y - 18, textWidth + 16, 22)
+          
+          // 강조 텍스트
+          ctx.fillStyle = '#FFFFFF'
+          ctx.font = 'bold 16px Arial'
+          ctx.textAlign = 'center'
+          ctx.fillText(prize, x, y - 2)
+        } else {
+          // 원래 색상으로 복원
+          drawStaticLadder()
+        }
+        
+        flashCount++
+      }, 200)
+    }
+    
+    const startLadderGame = () => {
       gamePhase.value = 'playing'
       ladderStructure.value = generateLadder()
       playerResults.value = {}
+      
+      // 미리 당첨 결과 생성
+      prizeOrder.value = generateCoffeeResults()
       
       startTimer()
       
@@ -748,29 +677,38 @@ export default {
     }
     
     const restartGame = () => {
-      gamePhase.value = 'setup'
-      prizes.value = []
+      gamePhase.value = 'playing'
       elapsedTime.value = 0
       playerResults.value = {}
       currentAnimatingPlayer.value = null
       animatingAvatar.value = { x: 0, y: 0, visible: false }
       animatingTrails.value = [] // 게임 재시작 시 트레일 초기화
-      ladderStructure.value = []
+      ladderStructure.value = generateLadder()
+      
+      // 새로운 당첨 결과 생성
+      prizeOrder.value = generateCoffeeResults()
+      
       stopTimer()
+      startTimer()
+      
+      // 캔버스 다시 그리기
+      setTimeout(() => {
+        drawStaticLadder()
+      }, 100)
     }
     
     // 생명주기
     onMounted(() => {
-      // 초기 당첨 내용 설정
-      setDefaultPrizes()
+      // 게임 시작
+      startLadderGame()
       
       // 캔버스 크기 조정
       const updateCanvasSize = () => {
         const container = ladderCanvas.value?.parentElement
         if (container) {
           const rect = container.getBoundingClientRect()
-          canvasWidth.value = Math.min(800, rect.width - 40)
-          canvasHeight.value = Math.min(600, canvasWidth.value * 0.75)
+          canvasWidth.value = Math.min(600, rect.width - 40)
+          canvasHeight.value = Math.min(450, canvasWidth.value * 0.75)
         }
       }
       
@@ -783,29 +721,27 @@ export default {
       window.removeEventListener('resize', updateCanvasSize)
     })
     
-    return {
-      gamePhase,
-      prizes,
-      elapsedTime,
-      playerResults,
-      currentAnimatingPlayer,
-      animatingAvatar,
-      animatingTrails, // 템플릿에 추가
-      ladderCanvas,
-      canvasWidth,
-      canvasHeight,
-      filledPrizes,
-      canStartGame,
-      allPlayersFinished,
-      getCurrentPhaseText,
-      formatTime,
-      setDefaultPrizes,
-      shufflePrizes,
-      resetSetup,
-      startLadderGame,
-      animatePlayerPath,
-      restartGame
-    }
+          return {
+        gamePhase,
+        elapsedTime,
+        playerResults,
+        currentAnimatingPlayer,
+        animatingAvatar,
+        animatingTrails, // 템플릿에 추가
+        ladderCanvas,
+        canvasWidth,
+        canvasHeight,
+        prizeOrder,
+        allPlayersFinished,
+        getCurrentPhaseText,
+        formatTime,
+        startLadderGame,
+        animatePlayerPath,
+        animateVerticalMove,
+        animateHorizontalMove,
+        highlightWinningPosition,
+        restartGame
+      }
   }
 }
 </script>

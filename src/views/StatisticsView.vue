@@ -207,7 +207,7 @@
                 :key="month.month"
                 class="flex items-center justify-between p-4 rounded-lg bg-gray-50 border border-gray-200"
               >
-                <div>
+              <div>
                   <div class="font-bold text-fg">{{ month.month }}</div>
                   <div class="text-sm text-gray-600">{{ month.games }}게임</div>
                 </div>
@@ -241,11 +241,11 @@
 import { ref, computed, onMounted } from 'vue'
 import ToolPhotoStrip from '../components/ToolPhotoStrip.vue'
 import { 
-  CoffeeIcon,
-  CoffeeBeansIcon,
+  CoffeeIcon, 
+  CoffeeBeansIcon, 
   WrenchIcon,
   RestartIcon,
-  HomeIcon
+  HomeIcon 
 } from '../components/icons/GameIcons.vue'
 import { 
   loadStatistics, 
@@ -253,8 +253,8 @@ import {
   saveSettings, 
   getTopSpenders, 
   getRecentGames, 
-  getMonthlyStats, 
-  clearStatistics 
+  getMonthlyStats,
+  clearStatistics
 } from '../utils/statistics.js'
 
 export default {
@@ -374,7 +374,7 @@ button:hover {
 @media (max-width: 768px) {
   .grid-cols-4 {
     grid-template-columns: repeat(2, 1fr);
-  }
+}
 }
 
 /* 세로 점선 애니메이션 */
