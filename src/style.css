@@ -1,0 +1,253 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Pretendard', 'Roboto', system-ui, -apple-system, sans-serif;
+    background: #F6F8F7;
+    color: #1A1A1A;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-width: 1366px;
+    min-height: 768px;
+    background: linear-gradient(135deg, #F6F8F7 0%, #E5E7EB 100%);
+  }
+
+  /* 스크롤바 스타일링 */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #F3F4F6;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #F28C28;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #FFBF7A;
+  }
+}
+
+@layer components {
+  /* 버튼 스타일 */
+  .btn-primary {
+    @apply bg-primary-500 text-fg-invert font-bold py-2 px-4 rounded transition-all duration-200;
+    @apply hover:bg-primary-300 focus:outline-none focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 focus:ring-offset-white;
+    @apply disabled:bg-gray-400 disabled:text-white disabled:cursor-not-allowed;
+    box-shadow: 0 2px 4px rgba(44, 71, 63, 0.2);
+  }
+
+  .btn-accent {
+    @apply bg-accent-400 text-fg-invert font-bold py-2 px-4 rounded transition-all duration-200;
+    @apply hover:bg-accent-200 focus:outline-none focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 focus:ring-offset-white;
+    box-shadow: 0 2px 4px rgba(242, 140, 40, 0.2);
+  }
+
+  /* 탭 스타일 */
+  .tab-button {
+    @apply px-4 py-2 font-bold rounded-t transition-all duration-200 cursor-pointer;
+    @apply text-gray-600 bg-transparent border-b-2 border-transparent;
+    @apply hover:text-primary-500 hover:bg-gray-50;
+    position: relative;
+  }
+
+  .tab-button.active {
+    @apply text-accent-400 bg-white border-b-2 border-accent-400;
+    box-shadow: inset 0 -2px 0 0 #F28C28;
+  }
+
+  /* 입력 필드 스타일 */
+  .input-field {
+    @apply bg-white border border-gray-300 text-fg px-3 py-2 rounded;
+    @apply focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent;
+    @apply placeholder-gray-400;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* 캔버스 스타일 */
+  .game-canvas {
+    @apply aspect-video bg-white;
+    @apply border-4 border-primary-500 rounded-lg;
+    background-image: 
+      repeating-linear-gradient(
+        45deg,
+        rgba(242, 140, 40, 0.1) 0px,
+        rgba(242, 140, 40, 0.1) 8px,
+        transparent 8px,
+        transparent 16px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(44, 71, 63, 0.05) 0px,
+        rgba(44, 71, 63, 0.05) 4px,
+        transparent 4px,
+        transparent 8px
+      );
+  }
+
+  /* 모달 스타일 */
+  .modal-overlay {
+    @apply fixed inset-0 bg-bg-dark bg-opacity-75 flex items-center justify-center z-50;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-content {
+    @apply bg-bg-light border-2 border-accent-400 rounded-lg p-6 max-w-md w-full mx-4;
+    @apply transform transition-all duration-300 scale-95;
+    animation: modal-enter 0.3s ease-out forwards;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  /* 공구 테마 글로우 효과 */
+  .neon-text {
+    color: #F28C28;
+    text-shadow: 
+      0 0 5px rgba(242, 140, 40, 0.5),
+      0 0 10px rgba(242, 140, 40, 0.3),
+      0 0 15px rgba(242, 140, 40, 0.2);
+  }
+
+  .neon-border {
+    border: 2px solid #F28C28;
+    box-shadow: 
+      0 0 5px rgba(242, 140, 40, 0.3),
+      0 0 10px rgba(242, 140, 40, 0.2),
+      0 0 15px rgba(242, 140, 40, 0.1);
+  }
+
+  /* 총무팀 테마 카드 */
+  .tool-card {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
+    border: 1px solid #E5E7EB;
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  .tool-card:hover {
+    border-color: #F28C28;
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.05),
+      0 0 16px rgba(242, 140, 40, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+}
+
+@layer utilities {
+  .retro-bg {
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(242, 140, 40, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(44, 71, 63, 0.05) 0%, transparent 50%),
+      linear-gradient(180deg, #F6F8F7 0%, #E5E7EB 100%);
+  }
+
+  .retro-pattern {
+    background-image: 
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(242, 140, 40, 0.05) 2px,
+        rgba(242, 140, 40, 0.05) 4px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 20px,
+        rgba(44, 71, 63, 0.03) 20px,
+        rgba(44, 71, 63, 0.03) 22px
+      );
+  }
+
+  /* 공구 작업장 패턴 */
+  .workshop-pattern {
+    background-image: 
+      repeating-linear-gradient(
+        45deg,
+        rgba(242, 140, 40, 0.1) 0px,
+        rgba(242, 140, 40, 0.1) 2px,
+        transparent 2px,
+        transparent 10px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(44, 71, 63, 0.05) 0px,
+        rgba(44, 71, 63, 0.05) 1px,
+        transparent 1px,
+        transparent 5px
+      );
+  }
+
+  /* 금속 질감 */
+  .metal-texture {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F3F4F6 50%, #E5E7EB 100%);
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* 애니메이션 */
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tool-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 유틸리티 클래스 */
+.slide-in {
+  animation: slide-in 0.5s ease-out;
+}
+
+.fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.tool-spin {
+  animation: tool-rotate 2s linear infinite;
+} 
