@@ -28,7 +28,7 @@
       <div class="text-center mb-8">
         <h3 class="text-2xl font-bold text-accent-400 mb-4">🎯 떨어질 순서를 선택하세요!</h3>
         <p class="text-fg mb-6">
-          각자 자신이 떨어질 순서를 선택해주세요. 먼저 선택한 사람부터 게임이 시작됩니다.
+          각자 자신이 떨어질 순서를 클릭하여 선택해주세요.
         </p>
         
         <!-- 순서 선택 상태 표시 -->
@@ -55,26 +55,38 @@
         
         <!-- 순서 선택 버튼들 -->
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-4xl mx-auto">
-          <button
+          <div
             v-for="order in gameState.participants.length"
             :key="order"
-            @click="selectOrder(order)"
-            :disabled="isOrderTaken(order)"
-            :class="[
-              'p-6 rounded-lg border-2 transition-all duration-300',
-              isOrderTaken(order) 
-                ? 'bg-gray-200 border-gray-300 opacity-50 cursor-not-allowed'
-                : 'bg-white border-gray-300 hover:border-accent-400 hover:bg-accent-200 hover:scale-105 shadow-sm'
-            ]"
+            class="p-4 rounded-lg border-2 border-gray-300 bg-white shadow-sm"
           >
-            <div class="text-center">
+            <div class="text-center mb-3">
               <div class="text-3xl mb-2">{{ order === 1 ? '🥇' : order === 2 ? '🥈' : order === 3 ? '🥉' : '🎯' }}</div>
               <div class="font-bold text-accent-400 mb-1">{{ order }}번째</div>
-              <div class="text-xs text-gray-600">
-                {{ isOrderTaken(order) ? getPlayerByOrder(order) : '선택 가능' }}
-              </div>
             </div>
-          </button>
+            
+            <!-- 선택된 플레이어 또는 선택 버튼들 -->
+            <div v-if="getPlayerByOrder(order)" class="text-center">
+              <div class="text-sm font-medium text-green-600 mb-1">{{ getPlayerByOrder(order) }}</div>
+              <button
+                @click="removePlayerFromOrder(order)"
+                class="text-xs text-red-500 hover:text-red-700"
+              >
+                선택 취소
+              </button>
+            </div>
+            
+            <div v-else class="space-y-1">
+              <button
+                v-for="participant in availableParticipants"
+                :key="participant"
+                @click="selectOrder(order, participant)"
+                class="w-full px-2 py-1 text-xs bg-gray-100 hover:bg-accent-200 rounded transition-colors"
+              >
+                {{ participant }}
+              </button>
+            </div>
+          </div>
         </div>
         
         <!-- 게임 시작 버튼 -->
@@ -85,10 +97,10 @@
             class="px-8 py-4 text-lg font-bold bg-accent-400 text-fg-invert rounded hover:bg-accent-200 flex items-center gap-3 mx-auto transition-all"
           >
             <PlayIcon class="w-6 h-6" />
-            🪜 순서대로 사다리 게임 시작!
+            🪜 사다리 게임 시작!
           </button>
           <p v-else class="text-gray-600 mt-4">
-            모든 참가자가 순서를 선택해야 게임을 시작할 수 있습니다.
+            모든 참가자가 순서를 선택해야 게임을 시작할 수 있습니다. ({{ Object.keys(playerOrder).length }}/{{ gameState.participants.length }})
           </p>
         </div>
       </div>
@@ -99,11 +111,11 @@
       <div class="relative">
         <!-- 게임 진행 정보 -->
         <div class="text-center mb-6">
-          <div class="bg-accent-400 text-fg-invert px-6 py-3 rounded-full font-bold text-lg inline-block">
-            🎯 모든 플레이어가 동시에 사다리를 타고 있습니다!
+          <div class="bg-accent-400 text-fg-invert px-6 py-3 rounded-full font-bold text-lg inline-block animate-pulse">
+            🎯 사다리를 타고 내려가는 중...
           </div>
           <div class="text-sm text-gray-600 mt-2">
-            선택한 순서에 따라 결과가 결정됩니다
+            {{ gameProgress }}% 완료
           </div>
         </div>
         
@@ -112,7 +124,12 @@
           <div
             v-for="(player, index) in orderedPlayers"
             :key="player"
-            class="px-3 py-2 rounded text-sm font-medium bg-accent-400 text-fg-invert"
+            :class="[
+              'px-3 py-2 rounded text-sm font-medium transition-all',
+              index < currentPlayerIndex ? 'bg-green-500 text-white' :
+              index === currentPlayerIndex ? 'bg-accent-400 text-fg-invert animate-bounce' :
+              'bg-gray-300 text-gray-600'
+            ]"
           >
             {{ playerOrder[player] }}번째: {{ player }}
           </div>
@@ -129,7 +146,7 @@
         <!-- 진행 상태 -->
         <div class="text-center">
           <div class="text-lg text-accent-400 font-bold">
-            🪜 사다리 게임 진행 중...
+            🪜 {{ orderedPlayers[currentPlayerIndex] || '...' }}님이 사다리를 타고 있습니다
           </div>
           <div class="text-sm text-gray-600 mt-2">
             잠시 후 결과가 나타납니다
@@ -238,6 +255,11 @@ export default {
     const gameTimer = ref(null)
     const finalResult = ref(null)
     
+    // 게임 진행 상태
+    const gameProgress = ref(0)
+    const currentPlayerIndex = ref(0)
+    const ladderStructure = ref([])
+    
     // 캔버스 관련
     const ladderCanvas = ref(null)
     const canvasWidth = ref(800)
@@ -255,6 +277,10 @@ export default {
         if (player) ordered.push(player)
       }
       return ordered
+    })
+    
+    const availableParticipants = computed(() => {
+      return props.gameState.participants.filter(p => !playerOrder.value[p])
     })
     
     // 메서드들
@@ -277,19 +303,16 @@ export default {
       return `${mins}:${secs.toString().padStart(2, '0')}`
     }
     
-    const selectOrder = (order) => {
-      if (isOrderTaken(order)) return
-      
-      // 간단한 프롬프트로 플레이어 선택
-      const availablePlayers = props.gameState.participants.filter(p => !playerOrder.value[p])
-      if (availablePlayers.length === 0) return
-      
-      const player = availablePlayers[0] // 첫 번째 사용 가능한 플레이어
+    const selectOrder = (order, player) => {
+      if (playerOrder.value[player]) return // 이미 선택된 플레이어라면 무시
       playerOrder.value[player] = order
     }
-    
-    const isOrderTaken = (order) => {
-      return Object.values(playerOrder.value).includes(order)
+
+    const removePlayerFromOrder = (order) => {
+      const playerToRemove = Object.keys(playerOrder.value).find(p => playerOrder.value[p] === order)
+      if (playerToRemove) {
+        delete playerOrder.value[playerToRemove]
+      }
     }
     
     const getPlayerByOrder = (order) => {
@@ -300,16 +323,140 @@ export default {
       playerOrder.value = {}
     }
     
+    const generateLadder = () => {
+      const playerCount = props.gameState.participants.length
+      const ladderHeight = 8 // 사다리 단계 수
+      const structure = []
+      
+      // 각 단계마다 연결선 생성 (랜덤)
+      for (let level = 0; level < ladderHeight; level++) {
+        const connections = []
+        for (let i = 0; i < playerCount - 1; i++) {
+          // 30% 확률로 연결선 생성
+          if (Math.random() < 0.3) {
+            connections.push(i)
+          }
+        }
+        structure.push(connections)
+      }
+      
+      return structure
+    }
+    
+    const drawLadder = () => {
+      const canvas = ladderCanvas.value
+      if (!canvas) return
+      
+      const ctx = canvas.getContext('2d')
+      const playerCount = props.gameState.participants.length
+      const ladderHeight = ladderStructure.value.length
+      
+      // 캔버스 클리어
+      ctx.clearRect(0, 0, canvasWidth.value, canvasHeight.value)
+      
+      // 설정값
+      const padding = 50
+      const playerSpacing = (canvasWidth.value - 2 * padding) / (playerCount - 1)
+      const levelSpacing = (canvasHeight.value - 2 * padding) / ladderHeight
+      
+      // 세로선 그리기 (각 플레이어 경로)
+      ctx.strokeStyle = '#2C473F'
+      ctx.lineWidth = 3
+      
+      for (let i = 0; i < playerCount; i++) {
+        const x = padding + i * playerSpacing
+        ctx.beginPath()
+        ctx.moveTo(x, padding)
+        ctx.lineTo(x, canvasHeight.value - padding)
+        ctx.stroke()
+      }
+      
+      // 가로선 그리기 (연결선)
+      ctx.strokeStyle = '#F28C28'
+      ctx.lineWidth = 2
+      
+      ladderStructure.value.forEach((connections, level) => {
+        const y = padding + (level + 1) * levelSpacing
+        
+        connections.forEach(connection => {
+          const x1 = padding + connection * playerSpacing
+          const x2 = padding + (connection + 1) * playerSpacing
+          
+          ctx.beginPath()
+          ctx.moveTo(x1, y)
+          ctx.lineTo(x2, y)
+          ctx.stroke()
+        })
+      })
+      
+      // 플레이어 이름 표시
+      ctx.fillStyle = '#2C473F'
+      ctx.font = '14px bold'
+      ctx.textAlign = 'center'
+      
+      orderedPlayers.value.forEach((player, index) => {
+        const x = padding + index * playerSpacing
+        ctx.fillText(player, x, padding - 10)
+      })
+    }
+    
+    const simulateLadderGame = () => {
+      const playerCount = props.gameState.participants.length
+      const finalPositions = []
+      
+      // 각 플레이어의 최종 위치 계산
+      for (let playerIndex = 0; playerIndex < playerCount; playerIndex++) {
+        let currentPosition = playerIndex
+        
+        // 사다리를 따라 내려가면서 위치 추적
+        ladderStructure.value.forEach(connections => {
+          connections.forEach(connection => {
+            if (currentPosition === connection) {
+              currentPosition = connection + 1
+            } else if (currentPosition === connection + 1) {
+              currentPosition = connection
+            }
+          })
+        })
+        
+        finalPositions[currentPosition] = orderedPlayers.value[playerIndex]
+      }
+      
+      return finalPositions
+    }
+    
     const startSequentialGame = () => {
       if (!canStartGame.value) return
       
       gamePhase.value = 'playing'
+      gameProgress.value = 0
+      currentPlayerIndex.value = 0
+      
+      // 사다리 구조 생성
+      ladderStructure.value = generateLadder()
+      
       startTimer()
       
-      // 사다리 게임 시뮬레이션
+      // 게임 진행 애니메이션
+      const gameInterval = setInterval(() => {
+        gameProgress.value += 10
+        
+        if (gameProgress.value % 20 === 0 && currentPlayerIndex.value < orderedPlayers.value.length - 1) {
+          currentPlayerIndex.value++
+        }
+        
+        if (gameProgress.value >= 100) {
+          clearInterval(gameInterval)
+          setTimeout(() => {
+            finishGame()
+          }, 1000)
+        }
+      }, 200)
+      
+      // 캔버스에 사다리 그리기
       setTimeout(() => {
-        finishGame()
-      }, 3000)
+        drawLadder()
+      }, 100)
     }
     
     const startTimer = () => {
@@ -329,16 +476,20 @@ export default {
       gamePhase.value = 'completed'
       stopTimer()
       
-      // 간단한 결과 생성 (실제로는 사다리 게임 로직 구현)
-      const shuffledPlayers = [...props.gameState.participants].sort(() => Math.random() - 0.5)
-      const loser = shuffledPlayers[0]
-      const winners = shuffledPlayers.slice(1)
+      // 실제 사다리 게임 결과 계산
+      const finalPositions = simulateLadderGame()
+      
+      // 마지막 위치(가장 아래)가 패자
+      const loser = finalPositions[finalPositions.length - 1]
+      const winners = finalPositions.slice(0, -1).filter(p => p)
       
       finalResult.value = {
         loser,
         winners,
         gameTime: elapsedTime.value,
-        gameMode: 'ladder'
+        gameMode: 'ladder',
+        totalParticipants: props.gameState.participants.length,
+        timestamp: Date.now()
       }
       
       emit('game-complete', finalResult.value)
@@ -349,6 +500,9 @@ export default {
       playerOrder.value = {}
       elapsedTime.value = 0
       finalResult.value = null
+      gameProgress.value = 0
+      currentPlayerIndex.value = 0
+      ladderStructure.value = []
       stopTimer()
     }
     
@@ -378,15 +532,18 @@ export default {
       playerOrder,
       elapsedTime,
       finalResult,
+      gameProgress,
+      currentPlayerIndex,
       ladderCanvas,
       canvasWidth,
       canvasHeight,
       canStartGame,
       orderedPlayers,
+      availableParticipants,
       getCurrentPhaseText,
       formatTime,
       selectOrder,
-      isOrderTaken,
+      removePlayerFromOrder,
       getPlayerByOrder,
       resetOrderSelection,
       startSequentialGame,
