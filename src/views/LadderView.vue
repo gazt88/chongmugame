@@ -23,67 +23,67 @@
       </div>
     </div>
 
-    <!-- 순서 선택 단계 -->
-    <div v-if="gamePhase === 'order-selection'" class="flex-1 flex flex-col items-center justify-center p-8">
-      <div class="text-center mb-8">
-        <h3 class="text-2xl font-bold text-accent-400 mb-4">🎯 떨어질 순서를 선택하세요!</h3>
+    <!-- 당첨 내용 설정 단계 -->
+    <div v-if="gamePhase === 'setup'" class="flex-1 flex flex-col items-center justify-center p-8">
+      <div class="text-center mb-8 max-w-4xl mx-auto">
+        <h3 class="text-2xl font-bold text-accent-400 mb-4">🎁 당첨 내용을 설정하세요!</h3>
         <p class="text-fg mb-6">
-          각자 자신이 떨어질 순서를 클릭하여 선택해주세요.
+          참가자 수에 맞게 당첨 내용을 입력해주세요. ({{ gameState.participants.length }}개 필요)
         </p>
         
-        <!-- 순서 선택 상태 표시 -->
-        <div class="bg-white rounded-lg p-4 mb-6 max-w-2xl mx-auto border border-gray-200 shadow-sm">
-          <div class="text-sm text-gray-600 mb-2">선택 현황:</div>
-          <div class="flex flex-wrap gap-2 justify-center">
-            <div
-              v-for="(participant, index) in gameState.participants"
-              :key="participant"
-              :class="[
-                'px-3 py-1 rounded-full text-sm',
-                playerOrder[participant] 
-                  ? 'bg-accent-400 text-fg-invert' 
-                  : 'bg-gray-200 text-gray-600'
-              ]"
-            >
-              {{ participant }}
-              <span v-if="playerOrder[participant]" class="ml-1">
-                ({{ playerOrder[participant] }}번째)
-              </span>
+        <!-- 참가자와 당첨 내용 매칭 -->
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- 참가자 목록 -->
+          <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <h4 class="text-lg font-bold text-primary-500 mb-4">👥 참가자들</h4>
+            <div class="space-y-2">
+              <div
+                v-for="(participant, index) in gameState.participants"
+                :key="participant"
+                class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+              >
+                <div class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                  {{ index + 1 }}
+                </div>
+                <div class="font-medium">{{ participant }}</div>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <!-- 순서 선택 버튼들 -->
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-4xl mx-auto">
-          <div
-            v-for="order in gameState.participants.length"
-            :key="order"
-            class="p-4 rounded-lg border-2 border-gray-300 bg-white shadow-sm"
-          >
-            <div class="text-center mb-3">
-              <div class="text-3xl mb-2">{{ order === 1 ? '🥇' : order === 2 ? '🥈' : order === 3 ? '🥉' : '🎯' }}</div>
-              <div class="font-bold text-accent-400 mb-1">{{ order }}번째</div>
+          
+          <!-- 당첨 내용 입력 -->
+          <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <h4 class="text-lg font-bold text-accent-400 mb-4">🎁 당첨 내용</h4>
+            <div class="space-y-3">
+              <div
+                v-for="index in gameState.participants.length"
+                :key="`prize-${index}`"
+                class="flex items-center gap-3"
+              >
+                <div class="w-8 h-8 bg-accent-400 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                  {{ index }}
+                </div>
+                <input
+                  v-model="prizes[index - 1]"
+                  type="text"
+                  :placeholder="index === gameState.participants.length ? '커피사기 💸' : `${index}등 상품`"
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-400 focus:border-transparent"
+                />
+              </div>
             </div>
             
-            <!-- 선택된 플레이어 또는 선택 버튼들 -->
-            <div v-if="getPlayerByOrder(order)" class="text-center">
-              <div class="text-sm font-medium text-green-600 mb-1">{{ getPlayerByOrder(order) }}</div>
+            <!-- 기본값 설정 버튼 -->
+            <div class="mt-4 flex gap-2">
               <button
-                @click="removePlayerFromOrder(order)"
-                class="text-xs text-red-500 hover:text-red-700"
+                @click="setDefaultPrizes"
+                class="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-400 transition-colors"
               >
-                선택 취소
+                기본값 설정
               </button>
-            </div>
-            
-            <div v-else class="space-y-1">
               <button
-                v-for="participant in availableParticipants"
-                :key="participant"
-                @click="selectOrder(order, participant)"
-                class="w-full px-2 py-1 text-xs bg-gray-100 hover:bg-accent-200 rounded transition-colors"
+                @click="shufflePrizes"
+                class="px-4 py-2 text-sm bg-accent-400 text-white rounded hover:bg-accent-200 transition-colors"
               >
-                {{ participant }}
+                🎲 섞기
               </button>
             </div>
           </div>
@@ -93,139 +93,123 @@
         <div class="mt-8">
           <button
             v-if="canStartGame"
-            @click="startLadderAnimation"
+            @click="startLadderGame"
             class="px-8 py-4 text-lg font-bold bg-accent-400 text-fg-invert rounded hover:bg-accent-200 flex items-center gap-3 mx-auto transition-all"
           >
             <PlayIcon class="w-6 h-6" />
-            🪜 사다리 게임 시작!
+            🪜 사다리게임 시작!
           </button>
           <p v-else class="text-gray-600 mt-4">
-            모든 참가자가 순서를 선택해야 게임을 시작할 수 있습니다. ({{ Object.keys(playerOrder).length }}/{{ gameState.participants.length }})
+            모든 당첨 내용을 입력해주세요. ({{ filledPrizes }}/{{ gameState.participants.length }})
           </p>
         </div>
       </div>
     </div>
 
-    <!-- 게임 진행 단계 - 사다리 애니메이션 -->
-    <div v-else-if="gamePhase === 'playing'" class="flex-1 flex flex-col items-center justify-center p-8">
-      <!-- 현재 진행 상태 -->
+    <!-- 사다리게임 진행 단계 -->
+    <div v-else-if="gamePhase === 'playing'" class="flex-1 flex flex-col items-center p-6">
+      <!-- 진행 상황 -->
       <div class="text-center mb-6">
-        <div class="bg-accent-400 text-fg-invert px-6 py-3 rounded-full font-bold text-lg inline-block">
-          🪜 {{ currentAnimationStep.player }}님이 사다리를 타고 있습니다
+        <div v-if="currentAnimatingPlayer" class="bg-accent-400 text-fg-invert px-6 py-3 rounded-full font-bold text-lg inline-block">
+          🪜 {{ currentAnimatingPlayer }}님이 사다리를 타고 있습니다
         </div>
-        <div class="text-sm text-gray-600 mt-2">
-          {{ currentAnimationStep.step }}단계 / {{ ladderLevels }}단계
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-3 mt-3 max-w-md mx-auto">
-          <div class="bg-accent-400 h-3 rounded-full transition-all duration-300" 
-               :style="{ width: `${(currentAnimationStep.step / ladderLevels) * 100}%` }"></div>
+        <div v-else class="bg-primary-500 text-fg-invert px-6 py-3 rounded-full font-bold text-lg inline-block">
+          🎯 GO 버튼을 눌러서 사다리를 타보세요!
         </div>
       </div>
 
-      <!-- 대기 중인 플레이어들 -->
-      <div class="flex justify-center mb-6 gap-2 flex-wrap">
+      <!-- 참가자 GO 버튼들 -->
+      <div class="flex flex-wrap justify-center gap-4 mb-8">
         <div
-          v-for="(player, index) in orderedPlayers"
-          :key="player"
-          :class="[
-            'px-3 py-2 rounded text-sm font-medium transition-all',
-            index < currentPlayerIndex ? 'bg-green-500 text-white' :
-            index === currentPlayerIndex ? 'bg-accent-400 text-fg-invert animate-pulse scale-110' :
-            'bg-gray-300 text-gray-600'
-          ]"
+          v-for="(participant, index) in gameState.participants"
+          :key="participant"
+          class="text-center"
         >
-          {{ playerOrder[player] }}번째: {{ player }}
-          <span v-if="index < currentPlayerIndex" class="ml-1">✅</span>
-          <span v-if="index === currentPlayerIndex" class="ml-1">🏃‍♂️</span>
+          <div class="mb-2 font-bold text-primary-500">{{ participant }}</div>
+          <button
+            v-if="!playerResults[participant]"
+            @click="animatePlayerPath(participant, index)"
+            :disabled="!!currentAnimatingPlayer"
+            :class="[
+              'px-6 py-3 rounded-lg font-bold transition-all',
+              currentAnimatingPlayer 
+                ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                : 'bg-accent-400 text-fg-invert hover:bg-accent-200 hover:scale-105'
+            ]"
+          >
+            {{ currentAnimatingPlayer === participant ? '진행중...' : 'GO!' }}
+          </button>
+          <div
+            v-else
+            class="px-6 py-3 rounded-lg font-bold bg-green-500 text-white"
+          >
+            완료 ✅
+          </div>
+          <!-- 결과 표시 -->
+          <div v-if="playerResults[participant]" class="mt-2 text-sm">
+            <div class="font-bold text-accent-400">{{ playerResults[participant] }}</div>
+          </div>
         </div>
       </div>
 
       <!-- 사다리 캔버스 -->
-      <div class="relative">
+      <div class="relative bg-white rounded-lg p-4 shadow-lg border-4 border-primary-500">
         <canvas
           ref="ladderCanvas"
           :width="canvasWidth"
           :height="canvasHeight"
-          class="border-4 border-primary-500 rounded-lg shadow-lg bg-white"
+          class="block"
         />
         
-        <!-- 플레이어 아바타들 (캔버스 위에 절대 위치) -->
+        <!-- 움직이는 플레이어 아바타 -->
         <div
-          v-for="(player, index) in orderedPlayers"
-          :key="`avatar-${player}`"
-          v-show="index <= currentPlayerIndex"
+          v-if="currentAnimatingPlayer && animatingAvatar.visible"
           :class="[
-            'absolute transition-all duration-500 ease-in-out',
-            'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold',
-            index === currentPlayerIndex ? 'bg-red-500 text-white animate-bounce z-20' : 'bg-green-500 text-white z-10'
+            'absolute w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold',
+            'bg-red-500 text-white border-2 border-white shadow-lg transition-all duration-300 ease-in-out z-10'
           ]"
-          :style="getPlayerAvatarStyle(index)"
+          :style="{
+            left: `${animatingAvatar.x}px`,
+            top: `${animatingAvatar.y}px`,
+            transform: 'translate(-50%, -50%)'
+          }"
         >
-          {{ player.slice(0, 1) }}
+          {{ currentAnimatingPlayer.slice(0, 1) }}
         </div>
       </div>
 
-      <!-- 진행 메시지 -->
-      <div class="text-center mt-6">
-        <div class="text-lg text-accent-400 font-bold">
-          {{ getProgressMessage() }}
-        </div>
-        <div class="text-sm text-gray-600 mt-2">
-          각 단계마다 연결선을 확인하며 내려갑니다
-        </div>
-      </div>
-    </div>
-
-    <!-- 게임 완료 단계 -->
-    <div v-else-if="gamePhase === 'completed'" class="flex-1 flex items-center justify-center p-8">
-      <div class="text-center">
-        <h3 class="text-3xl font-bold text-accent-400 mb-6">🎉 게임 완료!</h3>
-        
-        <!-- 최종 결과 시각화 -->
-        <div class="bg-white rounded-lg p-6 mb-6 max-w-3xl mx-auto border border-gray-200 shadow-lg">
-          <h4 class="text-xl font-bold text-red-500 mb-4">💸 커피사는 사람</h4>
-          <div class="text-4xl font-bold text-red-500 mb-6 p-4 bg-red-50 rounded-lg">
-            {{ finalResult.loser }}
-          </div>
-          
-          <h4 class="text-xl font-bold text-green-600 mb-4">☕ 커피받는 사람들</h4>
-          <div class="flex flex-wrap gap-3 justify-center">
+      <!-- 결과 요약 -->
+      <div v-if="Object.keys(playerResults).length > 0" class="mt-8 max-w-2xl mx-auto">
+        <h4 class="text-xl font-bold text-center text-primary-500 mb-4">🏆 결과 발표</h4>
+        <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+          <div class="grid gap-3">
             <div
-              v-for="winner in finalResult.winners"
-              :key="winner"
-              class="px-4 py-2 bg-green-500 text-white rounded-full font-medium"
+              v-for="(result, player) in playerResults"
+              :key="player"
+              :class="[
+                'flex justify-between items-center p-3 rounded-lg',
+                result.includes('커피') ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'
+              ]"
             >
-              ✅ {{ winner }}
-            </div>
-          </div>
-          
-          <!-- 최종 순서 -->
-          <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h5 class="font-bold mb-3">📋 최종 순서</h5>
-            <div class="flex flex-wrap gap-2 justify-center">
-              <div
-                v-for="(player, position) in finalResult.finalOrder"
-                :key="`final-${position}`"
-                :class="[
-                  'px-3 py-2 rounded font-medium',
-                  position === finalResult.finalOrder.length - 1 
-                    ? 'bg-red-500 text-white' 
-                    : 'bg-green-500 text-white'
-                ]"
-              >
-                {{ position + 1 }}위: {{ player }}
+              <div class="font-bold">{{ player }}</div>
+              <div :class="result.includes('커피') ? 'text-red-600 font-bold' : 'text-green-600 font-bold'">
+                {{ result }}
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- 게임 통계 -->
-        <div class="bg-white rounded-lg p-4 mb-6 max-w-md mx-auto border border-gray-200 shadow-sm">
-          <div class="text-sm text-gray-600 space-y-1">
-            <div>총 게임 시간: {{ formatTime(elapsedTime) }}</div>
-            <div>참가자 수: {{ gameState.participants.length }}명</div>
-            <div>사다리 단계: {{ ladderLevels }}단계</div>
-            <div>게임 방식: 순서 선택 사다리</div>
+      <!-- 모든 결과 완료 시 최종 결과 -->
+      <div v-if="allPlayersFinished" class="mt-6">
+        <div class="text-center">
+          <h3 class="text-2xl font-bold text-accent-400 mb-4">🎉 게임 완료!</h3>
+          <div class="bg-white rounded-lg p-6 max-w-md mx-auto border border-gray-200 shadow-sm">
+            <div class="text-sm text-gray-600 space-y-1">
+              <div>총 게임 시간: {{ formatTime(elapsedTime) }}</div>
+              <div>참가자 수: {{ gameState.participants.length }}명</div>
+              <div>게임 방식: 사다리게임</div>
+            </div>
           </div>
         </div>
       </div>
@@ -235,7 +219,7 @@
     <div class="bg-white border-t-2 border-dashed border-accent-400 p-4">
       <div class="container mx-auto flex justify-center gap-4">
         <button
-          v-if="gamePhase === 'completed'"
+          v-if="gamePhase === 'playing'"
           @click="restartGame"
           class="px-6 py-2 bg-accent-400 text-fg-invert rounded hover:bg-accent-200 flex items-center gap-2 transition-all"
         >
@@ -244,12 +228,12 @@
         </button>
         
         <button
-          v-if="gamePhase === 'order-selection'"
-          @click="resetOrderSelection"
+          v-if="gamePhase === 'setup'"
+          @click="resetSetup"
           class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-400 flex items-center gap-2 transition-all"
         >
           <RestartIcon class="w-4 h-4" />
-          순서 초기화
+          초기화
         </button>
         
         <button
@@ -292,19 +276,19 @@ export default {
   emits: ['game-complete', 'back-to-home'],
   setup(props, { emit }) {
     // 게임 상태
-    const gamePhase = ref('order-selection') // 'order-selection', 'playing', 'completed'
-    const playerOrder = ref({}) // 플레이어별 순서
+    const gamePhase = ref('setup') // 'setup', 'playing', 'completed'
+    const prizes = ref([]) // 당첨 내용들
     const elapsedTime = ref(0)
     const gameTimer = ref(null)
-    const finalResult = ref(null)
     
-    // 애니메이션 관련 상태
-    const currentPlayerIndex = ref(0)
-    const currentAnimationStep = ref({ player: '', step: 0 })
+    // 사다리 관련
     const ladderStructure = ref([])
     const ladderLevels = ref(8)
-    const playerPaths = ref({}) // 각 플레이어의 최종 경로
-    const playerPositions = ref({}) // 각 플레이어의 현재 위치
+    const playerResults = ref({}) // 각 플레이어의 결과
+    
+    // 애니메이션 관련
+    const currentAnimatingPlayer = ref(null)
+    const animatingAvatar = ref({ x: 0, y: 0, visible: false })
     
     // 캔버스 관련
     const ladderCanvas = ref(null)
@@ -317,30 +301,25 @@ export default {
     })
     
     // 계산된 속성들
+    const filledPrizes = computed(() => {
+      return prizes.value.filter(prize => prize && prize.trim()).length
+    })
+    
     const canStartGame = computed(() => {
-      return Object.keys(playerOrder.value).length === props.gameState.participants.length
+      return filledPrizes.value === props.gameState.participants.length
     })
     
-    const orderedPlayers = computed(() => {
-      const ordered = []
-      for (let i = 1; i <= props.gameState.participants.length; i++) {
-        const player = Object.keys(playerOrder.value).find(p => playerOrder.value[p] === i)
-        if (player) ordered.push(player)
-      }
-      return ordered
-    })
-    
-    const availableParticipants = computed(() => {
-      return props.gameState.participants.filter(p => !playerOrder.value[p])
+    const allPlayersFinished = computed(() => {
+      return Object.keys(playerResults.value).length === props.gameState.participants.length
     })
     
     // 메서드들
     const getCurrentPhaseText = () => {
       switch (gamePhase.value) {
-        case 'order-selection':
-          return '순서 선택 단계'
+        case 'setup':
+          return '당첨 내용 설정 단계'
         case 'playing':
-          return '게임 진행 중'
+          return '사다리게임 진행 중'
         case 'completed':
           return '게임 완료'
         default:
@@ -354,24 +333,29 @@ export default {
       return `${mins}:${secs.toString().padStart(2, '0')}`
     }
     
-    const selectOrder = (order, player) => {
-      if (playerOrder.value[player]) return
-      playerOrder.value[player] = order
-    }
-
-    const removePlayerFromOrder = (order) => {
-      const playerToRemove = Object.keys(playerOrder.value).find(p => playerOrder.value[p] === order)
-      if (playerToRemove) {
-        delete playerOrder.value[playerToRemove]
+    const setDefaultPrizes = () => {
+      const defaultPrizes = []
+      const participantCount = props.gameState.participants.length
+      
+      for (let i = 0; i < participantCount - 1; i++) {
+        defaultPrizes.push(`${i + 1}등 상품`)
       }
+      defaultPrizes.push('커피사기 💸')
+      
+      prizes.value = defaultPrizes
     }
     
-    const getPlayerByOrder = (order) => {
-      return Object.keys(playerOrder.value).find(p => playerOrder.value[p] === order) || ''
+    const shufflePrizes = () => {
+      const shuffled = [...prizes.value]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      }
+      prizes.value = shuffled
     }
     
-    const resetOrderSelection = () => {
-      playerOrder.value = {}
+    const resetSetup = () => {
+      prizes.value = []
     }
     
     const generateLadder = () => {
@@ -401,7 +385,7 @@ export default {
       if (!canvas) return
       
       const ctx = canvas.getContext('2d')
-      const playerCount = orderedPlayers.value.length
+      const playerCount = props.gameState.participants.length
       
       // 캔버스 클리어
       ctx.clearRect(0, 0, canvasWidth.value, canvasHeight.value)
@@ -449,25 +433,29 @@ export default {
         })
       })
       
-      // 플레이어 이름 표시 (상단)
+      // 참가자 이름 표시 (상단)
       ctx.fillStyle = '#2C473F'
       ctx.font = 'bold 16px Arial'
       ctx.textAlign = 'center'
       
-      orderedPlayers.value.forEach((player, index) => {
+      props.gameState.participants.forEach((player, index) => {
         const x = canvasConfig.value.padding + index * canvasConfig.value.playerSpacing
         ctx.fillText(player, x, canvasConfig.value.padding - 20)
       })
       
-      // 결과 위치 표시 (하단)
+      // 당첨 내용 표시 (하단)
       ctx.fillStyle = '#666'
       ctx.font = 'bold 14px Arial'
       
-      for (let i = 0; i < playerCount; i++) {
-        const x = canvasConfig.value.padding + i * canvasConfig.value.playerSpacing
-        const position = i === playerCount - 1 ? '💸 커피사기' : `${i + 1}위`
-        ctx.fillText(position, x, canvasHeight.value - canvasConfig.value.padding + 35)
-      }
+      prizes.value.forEach((prize, index) => {
+        const x = canvasConfig.value.padding + index * canvasConfig.value.playerSpacing
+        const lines = prize.length > 10 ? [prize.slice(0, 10), prize.slice(10)] : [prize]
+        
+        lines.forEach((line, lineIndex) => {
+          const y = canvasHeight.value - canvasConfig.value.padding + 35 + (lineIndex * 16)
+          ctx.fillText(line, x, y)
+        })
+      })
     }
     
     const calculatePlayerPath = (playerIndex) => {
@@ -489,95 +477,63 @@ export default {
       return path
     }
     
-    const getPlayerAvatarStyle = (playerIndex) => {
-      if (!playerPositions.value[playerIndex]) {
-        return { display: 'none' }
+    const animatePlayerPath = async (player, playerIndex) => {
+      if (currentAnimatingPlayer.value) return
+      
+      currentAnimatingPlayer.value = player
+      animatingAvatar.value.visible = true
+      
+      const path = calculatePlayerPath(playerIndex)
+      
+      // 애니메이션 실행
+      for (let i = 0; i < path.length; i++) {
+        const step = path[i]
+        
+        // 아바타 위치 업데이트
+        animatingAvatar.value.x = canvasConfig.value.padding + step.position * canvasConfig.value.playerSpacing
+        animatingAvatar.value.y = canvasConfig.value.padding + step.level * canvasConfig.value.levelSpacing
+        
+        // 각 단계마다 500ms 대기
+        await new Promise(resolve => setTimeout(resolve, 500))
       }
       
-      const pos = playerPositions.value[playerIndex]
-      const x = canvasConfig.value.padding + pos.position * canvasConfig.value.playerSpacing - 16
-      const y = canvasConfig.value.padding + pos.level * canvasConfig.value.levelSpacing - 16
+      // 최종 결과 설정
+      const finalPosition = path[path.length - 1].position
+      const finalPrize = prizes.value[finalPosition]
+      playerResults.value[player] = finalPrize
       
-      return {
-        left: `${x}px`,
-        top: `${y}px`
+      // 애니메이션 종료
+      animatingAvatar.value.visible = false
+      currentAnimatingPlayer.value = null
+      
+      // 모든 플레이어가 완료되면 게임 완료 이벤트 발생
+      if (allPlayersFinished.value) {
+        setTimeout(() => {
+          const gameResult = {
+            results: playerResults.value,
+            gameTime: elapsedTime.value,
+            gameMode: 'ladder',
+            totalParticipants: props.gameState.participants.length,
+            timestamp: Date.now()
+          }
+          emit('game-complete', gameResult)
+        }, 1000)
       }
     }
     
-    const getProgressMessage = () => {
-      const step = currentAnimationStep.value.step
-      const total = ladderLevels.value
-      
-      if (step === 0) return "시작 위치에서 대기 중..."
-      if (step === total) return "도착! 결과를 확인하세요."
-      return `${step}단계를 통과하여 내려가는 중...`
-    }
-    
-    const startLadderAnimation = () => {
+    const startLadderGame = () => {
       if (!canStartGame.value) return
       
       gamePhase.value = 'playing'
-      currentPlayerIndex.value = 0
       ladderStructure.value = generateLadder()
-      
-      // 모든 플레이어의 경로 미리 계산
-      orderedPlayers.value.forEach((player, index) => {
-        playerPaths.value[index] = calculatePlayerPath(index)
-      })
-      
-      // 초기 위치 설정
-      orderedPlayers.value.forEach((player, index) => {
-        playerPositions.value[index] = { level: 0, position: index }
-      })
+      playerResults.value = {}
       
       startTimer()
-      drawStaticLadder()
       
-      // 첫 번째 플레이어부터 애니메이션 시작
+      // 캔버스에 사다리 그리기
       setTimeout(() => {
-        animateNextPlayer()
-      }, 1000)
-    }
-    
-    const animateNextPlayer = () => {
-      if (currentPlayerIndex.value >= orderedPlayers.value.length) {
-        // 모든 플레이어 완료
-        setTimeout(() => {
-          finishGame()
-        }, 2000)
-        return
-      }
-      
-      const player = orderedPlayers.value[currentPlayerIndex.value]
-      const path = playerPaths.value[currentPlayerIndex.value]
-      
-      currentAnimationStep.value = {
-        player: player,
-        step: 0
-      }
-      
-      // 현재 플레이어의 경로를 단계별로 애니메이션
-      animatePlayerPath(currentPlayerIndex.value, path, 0)
-    }
-    
-    const animatePlayerPath = (playerIndex, path, stepIndex) => {
-      if (stepIndex >= path.length) {
-        // 현재 플레이어 애니메이션 완료, 다음 플레이어로
-        currentPlayerIndex.value++
-        setTimeout(() => {
-          animateNextPlayer()
-        }, 800)
-        return
-      }
-      
-      const step = path[stepIndex]
-      playerPositions.value[playerIndex] = step
-      currentAnimationStep.value.step = stepIndex
-      
-      // 다음 단계로 이동 (각 단계마다 600ms 지연)
-      setTimeout(() => {
-        animatePlayerPath(playerIndex, path, stepIndex + 1)
-      }, 600)
+        drawStaticLadder()
+      }, 100)
     }
     
     const startTimer = () => {
@@ -593,51 +549,23 @@ export default {
       }
     }
     
-    const finishGame = () => {
-      gamePhase.value = 'completed'
-      stopTimer()
-      
-      // 최종 결과 계산
-      const finalOrder = []
-      
-      orderedPlayers.value.forEach((player, index) => {
-        const path = playerPaths.value[index]
-        const finalPosition = path[path.length - 1].position
-        finalOrder[finalPosition] = player
-      })
-      
-      // 결과 설정
-      const loser = finalOrder[finalOrder.length - 1]
-      const winners = finalOrder.slice(0, -1).filter(p => p)
-      
-      finalResult.value = {
-        loser,
-        winners,
-        finalOrder,
-        gameTime: elapsedTime.value,
-        gameMode: 'ladder',
-        totalParticipants: props.gameState.participants.length,
-        timestamp: Date.now()
-      }
-      
-      emit('game-complete', finalResult.value)
-    }
-    
     const restartGame = () => {
-      gamePhase.value = 'order-selection'
-      playerOrder.value = {}
+      gamePhase.value = 'setup'
+      prizes.value = []
       elapsedTime.value = 0
-      finalResult.value = null
-      currentPlayerIndex.value = 0
-      currentAnimationStep.value = { player: '', step: 0 }
+      playerResults.value = {}
+      currentAnimatingPlayer.value = null
+      animatingAvatar.value = { x: 0, y: 0, visible: false }
       ladderStructure.value = []
-      playerPaths.value = {}
-      playerPositions.value = {}
       stopTimer()
     }
     
     // 생명주기
     onMounted(() => {
+      // 초기 당첨 내용 설정
+      setDefaultPrizes()
+      
+      // 캔버스 크기 조정
       const updateCanvasSize = () => {
         const container = ladderCanvas.value?.parentElement
         if (container) {
@@ -658,28 +586,25 @@ export default {
     
     return {
       gamePhase,
-      playerOrder,
+      prizes,
       elapsedTime,
-      finalResult,
-      currentPlayerIndex,
-      currentAnimationStep,
-      ladderLevels,
+      playerResults,
+      currentAnimatingPlayer,
+      animatingAvatar,
       ladderCanvas,
       canvasWidth,
       canvasHeight,
+      filledPrizes,
       canStartGame,
-      orderedPlayers,
-      availableParticipants,
+      allPlayersFinished,
       getCurrentPhaseText,
       formatTime,
-      selectOrder,
-      removePlayerFromOrder,
-      getPlayerByOrder,
-      resetOrderSelection,
-      startLadderAnimation,
-      restartGame,
-      getPlayerAvatarStyle,
-      getProgressMessage
+      setDefaultPrizes,
+      shufflePrizes,
+      resetSetup,
+      startLadderGame,
+      animatePlayerPath,
+      restartGame
     }
   }
 }
@@ -692,7 +617,7 @@ export default {
 
 /* 반응형 */
 @media (max-width: 768px) {
-  .game-canvas {
+  .canvas {
     max-width: 100%;
     height: auto;
   }
@@ -720,23 +645,8 @@ button:hover:not(:disabled) {
   transition: transform 0.2s ease;
 }
 
-/* 플레이어 아바타 애니메이션 */
-.animate-bounce {
-  animation: bounce 1s infinite;
-}
-
-@keyframes bounce {
-  0%, 20%, 53%, 80%, 100% {
-    transform: translate3d(0, 0, 0);
-  }
-  40%, 43% {
-    transform: translate3d(0, -15px, 0);
-  }
-  70% {
-    transform: translate3d(0, -7px, 0);
-  }
-  90% {
-    transform: translate3d(0, -2px, 0);
-  }
+/* 애니메이션 효과 */
+.transition-all {
+  transition: all 0.3s ease;
 }
 </style> 
